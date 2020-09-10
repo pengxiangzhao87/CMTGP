@@ -406,7 +406,6 @@ public class OrderController extends BaseController {
 	 */
 	public void applyForRefundDetail(){
 		Integer id = getParaToInt("id");
-		Integer oId = getParaToInt("oId");
 		String token = getPara("token");
 		String openid = CacheKit.get("miniProgram", token);
 		OrderDetail orderDetail = OrderDetail.dao.findById(id);
@@ -415,7 +414,22 @@ public class OrderController extends BaseController {
 		}else{
 			orderDetail.setChargebackStatus(1);
 			orderDetail.update();
-			new SubscribeMessage(oId, dataDTO,MiniUtil.REFUND_TEMP,2,openid).start();
+			//发送订阅消息
+			Map<String, Object> idMap = new HashMap<String, Object>();
+			idMap.put("value", orderDetail.getOId());
+			Map<String, Object> amountMap = new HashMap<String, Object>();
+			amountMap.put("value", orderDetail.getPaymentPrice());
+			Map<String, Object> phraseMap = new HashMap<String, Object>();
+			phraseMap.put("value", "退款申请");
+			Map<String, Object> timeMap = new HashMap<String, Object>();
+			timeMap.put("value", new Date());
+
+			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
+			dataDTO.setTime2(timeMap);
+			dataDTO.setAmount3(amountMap);
+			dataDTO.setPhrase4(phraseMap);
+			dataDTO.setCharacter_string1(idMap);
+			new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,openid).start();
 			renderSuccess();
 		}
 	}

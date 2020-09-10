@@ -334,20 +334,22 @@ public class MiniController extends BaseController {
     public void queryRefundOrder(){
         Integer oId = getParaToInt("oId");
         Integer id = getParaToInt("id");
-        //1：退单，2：返还差价
+        //1：退款，2：返还差价
         Integer type = getParaToInt("type");
         String resultStr = "退款中";
         try {
             Thread.sleep(1000);
             Date now = new Date();
             if(type==1){
-                List<Record> recordList = Db.find("select chargeback_status,refund_id,is_extra,extra_pay_back_status,extra_refund_id from t_order_detail where id=" + id);
+                List<Record> recordList = Db.find("select select b.o_id,b.payment_price,b.chargeback_status,b.refund_id,b.is_extra,b.extra_pay_back_status,b.extra_refund_id,c.u_openid,b.extra_price,b.extra_back_status" +
+                        " from t_order_basic a,t_order_detail b,t_user_setting c where a.o_id=b.o_id and a.u_id=c.u_id and b.id=" + id);
                 Record record = recordList.get(0);
                 if(record.getInt("chargeback_status")==2){
                     resultStr = "退款成功";
                 }else{
+                    //查询退款
                     String refundCheckStr = miniService.queryRefundOrder(record.getStr("refund_id"));
-                    miniService.addWXLog(oId, id,null, "退单 - 查询结果", refundCheckStr, now);
+                    miniService.addWXLog(oId, id,null, "退款 - 查询结果", refundCheckStr, now);
 					Map<String, String> refundMap = WXPayUtil.xmlToMap(refundCheckStr);
 					if (refundMap.get("return_code").equals(WXPayConstants.SUCCESS)) {
 						if (refundMap.get("result_code").equals(WXPayConstants.SUCCESS)) {
@@ -355,31 +357,35 @@ public class MiniController extends BaseController {
 							Integer chargebackStatus = refundStatus.equals(WXPayConstants.SUCCESS) ? 2 : (refundStatus.equalsIgnoreCase("CHANGE") ? 4 : 3);
                             resultStr = refundStatus.equals(WXPayConstants.SUCCESS) ? "退款成功" : (refundStatus.equalsIgnoreCase("CHANGE") ? "退款异常" : "退款处理中");
                             Db.update("update t_order_detail set chargeback_status="+chargebackStatus+" where id="+id);
-                            if(record.get("is_extra")!=null && record.getInt("is_extra")==2){
-                                if(record.getInt("extra_pay_back_status")==2){
-                                    resultStr = "退款成功";
-                                }else{
-                                    String extraRefundCheckStr = miniService.queryRefundOrder(record.getStr("extra_refund_id"));
-                                    miniService.addWXLog(oId, id,null, "二次支付退单 - 查询结果", extraRefundCheckStr, now);
-                                    Map<String, String> extraRefundMap = WXPayUtil.xmlToMap(extraRefundCheckStr);
-                                    if (extraRefundMap.get("return_code").equals(WXPayConstants.SUCCESS)) {
-                                        if (extraRefundMap.get("result_code").equals(WXPayConstants.SUCCESS)) {
-                                            String extraRefundStatus = extraRefundMap.get("refund_status_0");
-                                            Integer extraStatus = extraRefundStatus.equals(WXPayConstants.SUCCESS) ? 2 : (extraRefundStatus.equalsIgnoreCase("CHANGE") ? 4 : 3);
-                                            resultStr = extraRefundStatus.equals(WXPayConstants.SUCCESS) ? "退款成功" : (extraRefundStatus.equalsIgnoreCase("CHANGE") ? "退款异常" : "退款处理中");
-                                            Db.update("update t_order_detail set extra_pay_back_status="+extraStatus+" where id="+id);
-                                            this.updateOrderClose(oId,id);
-                                        }
-                                    }
-                                }
-                            }else{
+                            if(record.get("is_extra")!=null && record.getInt("is_extra")==2 && record.getInt("extra_pay_back_status")!=null && record.getInt("extra_pay_back_status")==2){
                                 this.updateOrderClose(oId,id);
                             }
+                            resultStr = "退款成功";
+                            this.afterRefundSendMessage(record,type);
 						}
 					}
                 }
+                //二次支付退款
+                if(record.get("is_extra")!=null && record.getInt("is_extra")==2 && record.getInt("extra_pay_back_status")!=null ){
+                    if(record.getInt("extra_pay_back_status")!=2){
+                        String extraRefundCheckStr = miniService.queryRefundOrder(record.getStr("extra_refund_id"));
+                        miniService.addWXLog(oId, id,null, "二次支付退单 - 查询结果", extraRefundCheckStr, now);
+                        Map<String, String> extraRefundMap = WXPayUtil.xmlToMap(extraRefundCheckStr);
+                        if (extraRefundMap.get("return_code").equals(WXPayConstants.SUCCESS)) {
+                            if (extraRefundMap.get("result_code").equals(WXPayConstants.SUCCESS)) {
+                                String extraRefundStatus = extraRefundMap.get("refund_status_0");
+                                Integer extraStatus = extraRefundStatus.equals(WXPayConstants.SUCCESS) ? 2 : (extraRefundStatus.equalsIgnoreCase("CHANGE") ? 4 : 3);
+                                resultStr = extraRefundStatus.equals(WXPayConstants.SUCCESS) ? "退款成功" : (extraRefundStatus.equalsIgnoreCase("CHANGE") ? "退款异常" : "退款处理中");
+                                Db.update("update t_order_detail set extra_pay_back_status="+extraStatus+" where id="+id);
+                                if(record.getInt("chargeback_status")==2){
+                                    this.updateOrderClose(oId,id);
+                                }
+                            }
+                        }
+                    }
+                }
             }else{
-                List<Record> recordList = Db.find("select back_price_status,back_refund_id from t_order_basic where o_id=" + oId);
+                List<Record> recordList = Db.find("select a.back_price_status,a.back_refund_id,a.total_back_price ,b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id=" + oId);
                 Record record = recordList.get(0);
                 if(record.getInt("back_price_status")==2){
                     resultStr = "退款成功";
@@ -394,6 +400,8 @@ public class MiniController extends BaseController {
                             resultStr = refundStatus.equals(WXPayConstants.SUCCESS) ? "退款成功" : (refundStatus.equalsIgnoreCase("CHANGE") ? "退款异常" : "退款处理中");
                             Db.update("update t_order_basic set back_price_status="+chargebackStatus+" where o_id="+oId);
                             Db.update("update t_order_detail set extra_back_status="+chargebackStatus+" where id="+id);
+                            resultStr = "退款成功";
+                            this.afterRefundSendMessage(record,type);
                         }
                     }
                 }
@@ -402,15 +410,42 @@ public class MiniController extends BaseController {
         renderSuccess(resultStr);
     }
 
-    private void afterRefundSendMessage(Record record,Integer type,String openid){
+    /**
+     * 退款成功发送订阅消息
+     * @param record
+     * @param type
+     */
+    private void afterRefundSendMessage(Record record,Integer type){
         //1：退单，2：返还差价
+
+        Map<String, Object> idMap = new HashMap<String, Object>();
+        idMap.put("value", record.getInt("o_id"));
+        Map<String, Object> amountMap = new HashMap<String, Object>();
+        Map<String, Object> thingMap = new HashMap<String, Object>();
         if(type==1){
-
-
+            BigDecimal paymentPrice = record.getBigDecimal("payment_price");
+            thingMap.put("value", "商品退款");
+            if(record.getInt("is_extra")==1 && record.getInt("extra_back_status")!=null && record.getInt("extra_back_status")==2){
+                BigDecimal extraPrice = record.getBigDecimal("extra_price");
+                paymentPrice = paymentPrice.subtract(extraPrice);
+                thingMap.put("value", "商品退款，扣除商家支付的￥"+extraPrice+"差价");
+            }
+            amountMap.put("value", "￥"+paymentPrice);
         }else{
-
+            amountMap.put("value", "￥"+record.getBigDecimal("total_back_price"));
+            thingMap.put("value", "重量不足，退回差价");
         }
-        new SubscribeMessage(oId, dataDTO,MiniUtil.REFUND_SUCCESS_TEMP,2,openid).start();
+        Map<String, Object> dateMap = new HashMap<String, Object>();
+        dateMap.put("value", new Date());
+        Map<String, Object> phraseMap = new HashMap<String, Object>();
+        phraseMap.put("value", "直接退款");
+        MiniTempDataDTO dataDTO = new MiniTempDataDTO();
+        dataDTO.setCharacter_string1(idMap);
+        dataDTO.setAmount3(amountMap);
+        dataDTO.setDate2(dateMap);
+        dataDTO.setPhrase4(phraseMap);
+        dataDTO.setThing4(thingMap);
+        new SubscribeMessage(record.getInt("o_id"), dataDTO,MiniUtil.REFUND_SUCCESS_TEMP,2,record.getStr("u_openid")).start();
     }
 
 
@@ -451,13 +486,13 @@ public class MiniController extends BaseController {
                     int totalFee = Integer.valueOf(decodeData.get("total_fee")).intValue();
                     int refundFee = Integer.valueOf(decodeData.get("refund_fee")).intValue();
                     int refundStatus = decodeData.get("refund_status").equals("SUCCESS")?2:(decodeData.get("refund_status").equals("CHANGE")?4:5);
-                    StringBuffer sb = new StringBuffer("select a.o_id,b.id,a.total_price,a.total_back_price,b.payment_price,b.is_extra,b.extra_price,b.extra_back_status ");
+                    StringBuffer sb = new StringBuffer("select a.o_id,b.id,a.total_price,a.total_back_price,b.payment_price,b.is_extra,b.extra_price,b.extra_back_status,c.u_openid ");
                     sb.append(" ,a.transaction_id,a.out_trade_no ");
                     sb.append(" ,a.back_refund_id,a.back_price_status,a.back_out_refund_no ");
                     sb.append(" ,b.refund_id,b.chargeback_status,b.out_refund_no ");
                     sb.append(" ,b.extra_refund_id,b.extra_pay_back_status,b.extra_out_refund_no ");
-                    sb.append(" from t_order_basic a,t_order_detail b ");
-                    sb.append(" where  a.o_id=b.o_id and ( ");
+                    sb.append(" from t_order_basic a,t_order_detail b,t_user_setting c ");
+                    sb.append(" where  a.o_id=b.o_id and a.u_id=c.u_id and ( ");
                     sb.append(" (a.back_refund_id = '"+refundId+"' and a.back_out_refund_no='"+outRefundNo+"') ");
                     sb.append(" or (b.refund_id='"+refundId+"' and b.out_refund_no='"+outRefundNo+"') ");
                     sb.append(" or (b.extra_refund_id='"+refundId+"' and b.extra_out_refund_no='"+outRefundNo+"')) ");
@@ -473,22 +508,23 @@ public class MiniController extends BaseController {
                         String extraOutRefundNo = record.getStr("extra_out_refund_no");
                         int totalPrice = record.getBigDecimal("total_price").multiply(new BigDecimal("100")).stripTrailingZeros().intValue();
                         if(record.getStr("transaction_id").equals(transactionId) && record.getStr("out_trade_no").equals(outTradeNo) && totalFee==totalPrice){
+                            /*************分量不足，退款差价**************/
                             if(backRefundId.equals(refundId) && backOutRefundNo.equals(outRefundNo)){
-                                /*************差价退还**************/
                                 int backPriceStatus = record.getInt("back_price_status");
                                 int totalBackPrice = record.getBigDecimal("total_back_price").multiply(new BigDecimal("100")).stripTrailingZeros().intValue();
                                 if(totalBackPrice==refundFee){
-                                    if(backPriceStatus!=2){
+                                    if(backPriceStatus!=2 && backPriceStatus!=4 && backPriceStatus!=5){
                                         Db.update("update t_order_basic set back_price_status=" + refundStatus + " where o_id="+oId);
                                         Db.update("update t_order_detail set extra_back_status=" + refundStatus + " where is_extra=1 and o_id="+oId);
+                                        this.afterRefundSendMessage(record,2);
                                     }
                                     miniService.addWXLog(oId,null,refundFee,"微信差价退款回调",decode,now);
                                 }else{
                                     miniService.addWXLog(oId,null,refundFee,"微信差价退款回调 - 价格不符",decode,now);
                                     returnStr = "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[价格不符]]></return_msg></xml>";
                                 }
+                            /************退款***************/
                             }else if(refund.equals(refundId) && refundNo.equals(outRefundNo)){
-                                /************退款***************/
                                 Integer isExtra = record.getInt("is_extra");
                                 Integer extraBackStatus = record.getInt("extra_back_status");
                                 BigDecimal paymentPrice = record.getBigDecimal("payment_price");
@@ -498,11 +534,19 @@ public class MiniController extends BaseController {
                                 }
                                 Integer chargebackStatus = record.getInt("chargeback_status");
                                 if(paymentPrice.multiply(new BigDecimal("100")).stripTrailingZeros().intValue()==refundFee){
-                                    if(chargebackStatus!=2){
+                                    if(chargebackStatus!=2 && chargebackStatus!=4 && chargebackStatus!=5){
                                         Db.update("update t_order_detail set chargeback_status=" + refundStatus + " where id="+record.getInt("id"));
                                         Integer extraPayBackStatus = record.getInt("extra_pay_back_status");
-                                        if(isExtra==2 && extraPayBackStatus==2){
+                                        if(isExtra==2 ){
+                                            if( extraPayBackStatus==2 ){
+                                                //所有商品都退款，关闭订单
+                                                this.updateOrderClose(oId,record.getInt("id"));
+                                                this.afterRefundSendMessage(record,1);
+                                            }
+                                        }else{
+                                            //所有商品都退款，关闭订单
                                             this.updateOrderClose(oId,record.getInt("id"));
+                                            this.afterRefundSendMessage(record,1);
                                         }
                                     }
                                     miniService.addWXLog(oId,record.getInt("id"),refundFee,"微信退款回调",decode,now);
@@ -510,16 +554,18 @@ public class MiniController extends BaseController {
                                     miniService.addWXLog(oId,record.getInt("id"),refundFee,"微信退款回调 - 价格不符",decode,now);
                                     returnStr = "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[价格不符]]></return_msg></xml>";
                                 }
+                            /**************二次支付退款****************/
                             }else if(extraRefundId.equals(refundId) && extraOutRefundNo.equals(outRefundNo)){
-                                /**************二次支付退款****************/
                                 Integer extraPayBackStatus = record.getInt("extra_pay_back_status");
                                 int paymentPrice = record.getBigDecimal("extra_price").multiply(new BigDecimal("100")).stripTrailingZeros().intValue();
                                 if(paymentPrice==refundFee){
-                                    if(extraPayBackStatus!=2 ){
+                                    if(extraPayBackStatus!=2 && extraPayBackStatus!=4 && extraPayBackStatus!=5){
                                         Db.update("update t_order_detail set extra_pay_back_status=" + refundStatus + " where is_extra=2 and id="+record.getInt("id"));
                                         Integer chargebackStatus = record.getInt("chargeback_status");
                                         if(chargebackStatus==2){
+                                            //所有商品都退款，关闭订单
                                             this.updateOrderClose(oId,record.getInt("id"));
+                                            this.afterRefundSendMessage(record,1);
                                         }
                                     }
                                     miniService.addWXLog(oId,record.getInt("id"),refundFee,"微信二次支付退款回调",decode,now);
@@ -548,6 +594,11 @@ public class MiniController extends BaseController {
         renderSuccess(returnStr);
     }
 
+    /**
+     * 是否关闭订单
+     * @param oId
+     * @param id
+     */
     private void updateOrderClose(Integer oId,Integer id){
         //查询没有退单完成的
         List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and (chargeback_status<>2 or chargeback_status is null)");

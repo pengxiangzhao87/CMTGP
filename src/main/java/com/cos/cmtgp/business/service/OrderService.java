@@ -500,7 +500,7 @@ public class OrderService {
 			if (Db.update("update t_order_detail set extra_pay_status=2 where is_extra=2 and o_id=" + oId) > 0) {
 				//发送订阅
 				Map<String, Object> one = new HashMap<String, Object>();
-				one.put("value", "重量超出，需支付差价");
+				one.put("value", "重量超出，需支付差价￥"+payPrice);
 
 				Map<String, Object> two = new HashMap<String, Object>();
 				BigDecimal bigDecimal = new BigDecimal(payPrice).setScale(2, RoundingMode.HALF_UP);
