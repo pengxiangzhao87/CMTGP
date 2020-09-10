@@ -67,7 +67,7 @@ public class OrderController extends BaseController {
 		Integer oId = getParaToInt("oId");
 		String token = getPara("token");
 		String openid = CacheKit.get("miniProgram", token);
-		String sql = " select count(a.o_id) as sum,count(c.s_id) as finish,GROUP_CONCAT(a.id) as ids,a.chargeback_status,d.total_price,d.consignee_name,d.consignee_phone " +
+		String sql = " select count(a.o_id) as sum,count(c.s_id) as finish,GROUP_CONCAT(case when c.s_id is null then null else a.id end) as ids,GROUP_CONCAT(a.chargeback_status) as refundStatus,d.total_price,d.consignee_name,d.consignee_phone " +
 				" from t_order_detail a " +
 				" inner join t_order_basic d on a.o_id=d.o_id " +
 				" left join t_commodity_info b on a.s_id=b.s_id " +
@@ -75,8 +75,8 @@ public class OrderController extends BaseController {
 				" where a.is_send=1 and a.o_id="+oId;
 		List<Record> records = Db.find(sql);
 		Record record = records.get(0);
-
-		if(record.get("chargeback_status")!=null && record.getInt("chargeback_status")==1){
+		List<String> refundStatus = Arrays.asList(record.getStr("refundStatus").split(","));
+		if(refundStatus.contains("1")){
 			renderSuccess("1");
 		}else{
 			boolean flag = false;
@@ -409,7 +409,7 @@ public class OrderController extends BaseController {
 		String token = getPara("token");
 		String openid = CacheKit.get("miniProgram", token);
 		OrderDetail orderDetail = OrderDetail.dao.findById(id);
-		if(orderDetail.getIsSend()==1){
+		if(orderDetail.getIsSend()==2){
 			renderSuccess("1");
 		}else{
 			orderDetail.setChargebackStatus(1);
@@ -452,7 +452,7 @@ public class OrderController extends BaseController {
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
 			if(status==1){
-				sb.append(" and (a.order_status="+status+" or b.chargeback_status=1) ");
+				sb.append(" and ((a.order_status="+status+" and b.chargeback_status<>2) or b.chargeback_status=1) ");
 			}else{
 				sb.append(" and a.order_status="+status);
 			}
@@ -480,7 +480,8 @@ public class OrderController extends BaseController {
 			sb.append(" select order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(c.s_address_img,'~',1)) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,concat('https://www.sotardust.cn/CMTGP/upload/',b.extra_img_url) as extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
 			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status ");
 			sb.append("  ,case a.extra_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '待补差价' end as payText " +
-					" ,case a.back_price_status when 1 then '申请退单中' when 2 then '成功退单' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText ");
+					" ,case a.back_price_status when 1 then '申请退单中' when 2 then '成功退单' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText " +
+					" ,case b.chargeback_status when 1 then '退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '' end as refundBack ");
 			sb.append(" ,case a.payment_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' else '支付失败' end as paymentStatus ");
 			sb.append(" ,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,a.extra_payment,a.extra_time,extra_pay_back_status,a.total_price   ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d  ");

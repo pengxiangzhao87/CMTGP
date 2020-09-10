@@ -10,8 +10,8 @@ public class MiniUtil {
     //商户号
     public static final String MERCHANT_NO = "1602070933";
     //微信支付通知回调地址
-    public static final String NOTIFY_URL = "http://192.168.1.142:9000/CMTGP/mini/wxNotify";
-    public static final String REFUND_NOTIFY_URL = "http://192.168.1.142:9000/CMTGP/mini/wxRefundNotify";
+    public static final String NOTIFY_URL = "https://www.sotardust.cn/CMTGP//mini/wxNotify";
+    public static final String REFUND_NOTIFY_URL = "https://www.sotardust.cn/CMTGP//mini/wxRefundNotify";
     //订单查询
     public static final String CHECK_ORDER = "https://api.mch.weixin.qq.com/pay/orderquery";
     //统一下单

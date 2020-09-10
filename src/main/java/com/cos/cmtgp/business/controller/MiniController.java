@@ -117,11 +117,11 @@ public class MiniController extends BaseController {
         Integer type = getParaToInt("type");
         String token = getPara("token");
         String openid = CacheKit.get("miniProgram", token);
-        String resultStr = "";
+        String resultStr = "支付中";
         try {
             //等微信支付结果回调
             Thread.sleep(1000);
-            StringBuffer sb = new StringBuffer(" select a.order_time,a.payment_status,a.order_status,a.out_trade_no,a.extra_status,a.extra_out_trade_no ");
+            StringBuffer sb = new StringBuffer(" select a.order_time,a.payment_status,a.order_status,a.out_trade_no,a.extra_status,a.extra_out_trade_no,convert(a.total_price*100,SIGNED) as allPrice ");
             sb.append(" ,sum(b.payment_price) as total_price,convert(sum(b.payment_price)*100,SIGNED) as totalPrice ");
             sb.append(" ,a.extra_payment,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time ,d.s_openid ");
             sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
@@ -207,21 +207,21 @@ public class MiniController extends BaseController {
      * @throws Exception
      */
     private String checkOrderStatus(Record record,Integer type,Integer oId,String openid) throws Exception{
-        Integer totalFee = 0;
+        int totalFee = 0;
         String tradeNo = "";
         if(type==1){
             tradeNo = record.get("out_trade_no").toString();
-            totalFee = Integer.valueOf(record.get("totalPrice").toString());
+            totalFee = record.getInt("allPrice");
         }else{
             tradeNo = record.get("extra_out_trade_no").toString();
-            totalFee = Integer.valueOf(record.get("extraPayment").toString());
+            totalFee = record.getInt("extraPayment");
         }
         String resultCheck = miniService.queryOrder(tradeNo);
         miniService.addWXLog(oId,null,Integer.valueOf(totalFee),"查询订单状态",resultCheck,new Date());
         Map<String, String> respData = WXPayUtil.xmlToMap(resultCheck);
         if(respData.get("return_code").equals(WXPayConstants.SUCCESS) ){
             if(respData.get("result_code").equals(WXPayConstants.SUCCESS) && respData.get("trade_state").equals(WXPayConstants.SUCCESS)){
-                if(respData.get("openid").equals(openid) && totalFee.intValue()==Integer.valueOf(respData.get("total_fee")).intValue()){
+                if(respData.get("openid").equals(openid) && totalFee==Integer.valueOf(respData.get("total_fee")).intValue()){
                     String tradeState = respData.get("trade_state");
                     String result = tradeState.equals("SUCCESS") ? "支付成功" : (tradeState.equals("REFUND") ? "转入退款" : (tradeState.equals("NOTPAY") ? "未支付" : (tradeState.equals("CLOSED") ? "已关闭" : (tradeState.equals("USERPAYING") ? "支付中" : "支付失败"))));
                     //支付状态(1:已支付，2:未支付，3支付中，4转入退款，5支付失败,6支付关闭)
@@ -341,7 +341,7 @@ public class MiniController extends BaseController {
             Thread.sleep(1000);
             Date now = new Date();
             if(type==1){
-                List<Record> recordList = Db.find("select select b.o_id,b.payment_price,b.chargeback_status,b.refund_id,b.is_extra,b.extra_pay_back_status,b.extra_refund_id,c.u_openid,b.extra_price,b.extra_back_status" +
+                List<Record> recordList = Db.find(" select b.o_id,b.payment_price,b.chargeback_status,b.refund_id,b.is_extra,b.extra_pay_back_status,b.extra_refund_id,c.u_openid,b.extra_price,b.extra_back_status" +
                         " from t_order_basic a,t_order_detail b,t_user_setting c where a.o_id=b.o_id and a.u_id=c.u_id and b.id=" + id);
                 Record record = recordList.get(0);
                 if(record.getInt("chargeback_status")==2){
@@ -357,7 +357,7 @@ public class MiniController extends BaseController {
 							Integer chargebackStatus = refundStatus.equals(WXPayConstants.SUCCESS) ? 2 : (refundStatus.equalsIgnoreCase("CHANGE") ? 4 : 3);
                             resultStr = refundStatus.equals(WXPayConstants.SUCCESS) ? "退款成功" : (refundStatus.equalsIgnoreCase("CHANGE") ? "退款异常" : "退款处理中");
                             Db.update("update t_order_detail set chargeback_status="+chargebackStatus+" where id="+id);
-                            if(record.get("is_extra")!=null && record.getInt("is_extra")==2 && record.getInt("extra_pay_back_status")!=null && record.getInt("extra_pay_back_status")==2){
+                            if(record.getInt("is_extra")!=2 || record.getInt("is_extra")==2 && record.getInt("extra_pay_back_status")!=null && record.getInt("extra_pay_back_status")==2){
                                 this.updateOrderClose(oId,id);
                             }
                             resultStr = "退款成功";
@@ -601,19 +601,9 @@ public class MiniController extends BaseController {
      */
     private void updateOrderClose(Integer oId,Integer id){
         //查询没有退单完成的
-        List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and (chargeback_status<>2 or chargeback_status is null)");
-        if(orderDetails.size()>0) {
-            //关闭订单
-            boolean flag = false;
-            for (OrderDetail detail : orderDetails) {
-                if (id.intValue() != detail.getId().intValue()) {
-                    flag = true;
-                }
-            }
-            if (!flag) {
-                //关闭订单
-                Db.update("update t_order_basic set order_status=4 where o_id = " + oId);
-            }
+        List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and chargeback_status<>2 ");
+        if(orderDetails.size()==0) {
+            Db.update("update t_order_basic set order_status=4 where o_id = " + oId);
         }
     }
 

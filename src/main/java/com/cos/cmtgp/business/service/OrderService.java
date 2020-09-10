@@ -359,6 +359,7 @@ public class OrderService {
                     " ,concat('￥',a.payment_price) as price,case b.init_unit when 0 then concat(a.order_num,'g') else concat(a.order_num,'个') end as num " +
                     " ,case a.is_extra when 2 then concat('实际重量:',a.extra_weight,'g,需支付￥',a.extra_price) when 1 then concat('实际重量:',a.extra_weight,'g,已退还￥',a.extra_price) else '' end as msg " +
                     " ,a.is_extra,case when a.extra_img_url is null then '' else a.extra_img_url end as extra_img_url,a.chargeback_status " +
+					" ,case a.chargeback_status when 1 then '待退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '申请退款' end as refundBack " +
                     " from t_order_detail a ,t_commodity_info b,t_supplier_setting c where b.p_id=c.s_id and a.s_id=b.s_id and a.o_id="+oId;
             List<Record> records = Db.find(sql);
 
