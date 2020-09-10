@@ -1,0 +1,155 @@
+<#include "/common/head.html"/>   
+<div class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'center',border:false,split:false"
+		style="padding: 10px 17px 10px 0px; border-left: 1px solid #d4d4d4">
+    <table id="dg"></table>
+    <div id="tb" style="padding:2px 5px;">
+        <div class="wrap_search">
+		        		
+			            	<span class="search_item">
+				            	<span class="item_text">供应商名称: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="pName" id="p_id" value=""/>
+				            	</span>    
+				            </span>
+				            <span class="search_item">
+				            	<span class="item_text">商品分类名称: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="sName" id="s_id" value=""/>
+				            	</span>    
+				            </span>
+				            <span class="search_item">
+				            	<span class="item_text">商品名称: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="s_name" id="s_name" value=""/>
+				            	</span>    
+				            </span>
+		        		
+        </div>
+        <div style="text-align: left; margin:6px;">
+            <a href="#" class="easyui-linkbutton addBtn" iconCls="glyphicon-plus" plain="true" onclick="add()">增加</a>
+            <a href="#" class="easyui-linkbutton updateBtn" iconCls="glyphicon-pencil" plain="true" onclick="update()">编辑</a>
+            <a href="#" class="easyui-linkbutton delBtn" iconCls="glyphicon-remove" plain="true" onclick="del()">删除</a>
+            <div id="searchBtnWrap" style="float:right; padding-right:40px;">
+                <a href="javascript:void(0)" class="easyui-linkbutton color1" iconCls="glyphicon-search" onclick="zcurdSearch(this)">搜索</a>
+                <a href="javascript:void(0)" class="easyui-linkbutton color2" iconCls="glyphicon-repeat" onclick="flushPage()">重置</a>
+            </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+<script type="text/javascript">
+var datagrid = $("#dg");
+
+var dgOptions = {
+        rownumbers:true,
+    	fit:true,
+    	border:false,
+        rownumbers:true,
+    	url:'listData',
+    	method:'post',
+    	toolbar:'#tb',
+    	pageSize: 20,
+    	pagination:true,
+    	multiSort:true,
+        queryParams: getInitParam(),
+        columns: [[
+		         {field:'s_id', checkbox:true}
+	           	 ,{field:'pName', title: '供应商名称', width:120, sortable: true}
+	           	 ,{field:'sName', title: '商品分类名称', width:120, sortable: true}
+	           	 ,{field:'s_name', title: '商品名称', width:120, sortable: true}
+	           	,{field:'s_price', title: '商品价格', width:120, sortable: true}
+	           	 ,{field:'s_unit', title: '商品单位', width:120, sortable: true}
+	           	 ,{field:'price_unit', title: '商品单价', width:120, sortable: true}
+	           	,{field:'init_num', title: '初始购买数量', width:120, sortable: true}
+	           	 ,{field:'init_unit', title: '售卖类型（重量/个数）', width:120, sortable: true,formatter : function(val, row){
+	                 	if(val == 0){  return '重量'} else {return '个数'}                        
+                 }}
+            	,{field:'is_active', title: '参加活动', width:120, sortable: true,formatter : function(val, row){
+                    if(val == 0){  return '否'} else if(val==1){return '时令水果'}else if(val==2){return '新商品'}else {return '折扣'}
+                }}
+	           	 ,{field:'s_desc', title: '商品描述', width:120, sortable: true}
+	           	 ,{field:'sales_desc', title: '商品销售说明', width:120, sortable: true}
+	           	,{field:'s_address_img', title: '商品图片', width:120, sortable: true}
+	           	 ,{field:'s_address_video', title: '商品视频', width:120, sortable: true}
+	           	 ,{field:'state', title: '可否下单', width:120, sortable: true,formatter : function(val, row){
+	                 	if(val == 0){  return '不能下单'} else {return '可以'}                        
+                 }}
+	           ]]
+	};
+$(function() {
+	datagrid.datagrid(dgOptions);
+});
+
+function zcurdSearch() {
+	var param = zcurdGetParam();
+	datagrid.datagrid("load", {
+		queryParams: param
+	})
+}
+
+function zcurdGetParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param[$(item).attr("name")] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+function getInitParam() {
+	var param = {};
+	$("#tb :input[user_name]").each(function(i, item) {
+		if($(item).val()) {
+			param["queryParams[" + $(item).attr("name") + "]"] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+var initPara = zcurdGetParam();
+function add() {
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("增加成功！");
+		//datagrid.datagrid("load");
+		location.reload();
+	}
+	top.openWindow("商品管理-增加", "${basePath}/commodity/addPage", {size: '700x850'});
+}
+
+function update() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].s_id;
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("更新成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("商品管理-编辑", "${basePath}/commodity/updatePage?id="+id, {size: '700x850'});
+}
+
+function del() {
+	var ids = [];
+	var flag = 0;
+	$.each(datagrid.datagrid("getSelections"), function(i, item) {
+		ids.push(item.s_id);
+	});
+	if(ids.length < 1) {
+		showWarnMsg("请选择需要删除的数据！");
+		return;
+	}
+	confirmMsg("确认删除？", function() {
+		$.post("deleteCommodity", {id: ids}, function(data) {
+			showMsg("删除成功！");
+			location.reload();
+		});
+	});
+}
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

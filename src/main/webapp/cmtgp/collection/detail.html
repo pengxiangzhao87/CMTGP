@@ -1,0 +1,211 @@
+<#include "/common/head.html"/>    
+    <table id="dg"></table>
+    <div id="tb" style="padding:2px 5px;">
+     <div class="wrap_search">
+       		<!-- <span class="search_item">
+            	<span class="item_text">检测状态: </span>
+            	<span class="item_obj">
+            		<input class="easyui-combobox" type="text" name="c_status" data-options="valueField:'id',textField:'text',url:'getCombobox',editable:false,panelHeight:'auto'" />
+            	</span>    
+            </span> -->
+	 </div>
+     <div style="text-align: left; margin:6px;">
+                 <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="codePrint()">导出</a>
+     </div>
+     </div>
+<script type="text/javascript">
+var datagrid = $("#dg");
+
+var dgOptions = {
+        rownumbers:true,
+    	fit:true,
+    	border:false,
+        rownumbers:true,
+    	url:'detailData',
+    	method:'post',
+    	toolbar:'#tb',
+    	pageSize: 20,
+    	pagination:true,
+    	multiSort:true,
+        queryParams: getInitParam(),
+        columns: [[
+		         {field:'c_id', checkbox:true}
+	           	 ,{field:'org_name', title: '所属机构', width:120, sortable: true}
+	           	 ,{field:'name', title: '姓名', width:120, sortable: true}
+	           	 ,{field:'IDCard', title: '身份证号', width:150, sortable: true}
+	           	 ,{field:'phone', title: '电话', width:120, sortable: true}
+	           	 ,{field:'c_addTime', title: '检查时间', width:150, sortable: true}
+	           	 ,{field:'c_value', title: '检查结果', width:120, sortable: true}
+	           	 ,{field:'c_status', title: '检查状态', width:120, sortable: true, styler:function(val, row) {
+	           		 if(val == true) {
+		           			return 'background-color: yellow; color: #FF0000;';
+		           		 }else {
+		           			return 'background-color: #4cae4c; color: #FFFFFF;';
+		           		 }
+		           	 }, formatter : function(val, row){
+	                 	if(val == true){  return '异常'} else {return '正常'}                        
+	                 }}
+	           ]]
+	};
+$(function() {
+	datagrid.datagrid(dgOptions);
+});
+
+function zcurdSearch() {
+	var param = zcurdGetParam();
+	datagrid.datagrid("load", {
+		queryParams: param
+	})
+}
+
+function zcurdGetParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param[$(item).attr("name")] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+function getInitParam() {
+	var param = {findDate:${findDate},IDCard:${IDCard}};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param["queryParams[" + $(item).attr("name") + "]"] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+var initPara = zcurdGetParam();
+function add() {
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("增加成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("用户管理-增加", "${basePath}/Interface/addPage?" + $.param(initPara), {size: '400x300'});
+}
+
+function update() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].id;
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("更新成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("用户管理-编辑", "updatePage?id=" + id, {size: '400x300'});
+}
+
+function del() {
+	var ids = [];
+	$.each(datagrid.datagrid("getSelections"), function(i, item) {
+		ids.push(item.user_account);
+	});
+	if(ids.length < 1) {
+		showWarnMsg("请选择需要删除的数据！");
+		return;
+	}
+	confirmMsg("确认删除？", function() {
+		$.post("delete", {id: ids}, function(data) {
+			showMsg("删除成功！");
+			datagrid.datagrid("load");
+		});
+	});
+}
+
+function detail() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].id;
+	top.openWindow("用户管理-详情", "detailPage?id=" + id, {size: '400x300'});
+}
+function codePrint() {
+	 var fileName = "人员体温检测数据-详情导出表";
+	 var data = $('#dg').datagrid('getExcelXml', { title: fileName }); //获取datagrid数据对应的excel需要的xml格式的内容
+	 var tempForm = document.createElement("form");
+		tempForm.action="${basePath}/Interface/exportDetailId";
+		tempForm.method="post";
+		document.body.appendChild(tempForm);
+		//create a submit button
+		var tempInput = document.createElement("input");
+		tempInput.type="hidden";
+		tempInput.name="data";
+		tempInput.value=data; //the parameter of method in the code of DispatchAction.
+		var tempFileName = document.createElement("input");
+		tempFileName.type="hidden";
+		tempFileName.name="filename";
+		tempFileName.value=fileName; 
+		tempForm.appendChild(tempInput);        //submit the form
+		tempForm.appendChild(tempFileName);
+		tempForm.submit();
+}
+
+/**
+Jquery easyui datagrid js导出excel
+修改自extgrid导出excel
+* allows for downloading of grid data (store) directly into excel
+* Method: extracts data of gridPanel store, uses columnModel to construct XML excel document,
+* converts to Base64, then loads everything into a data URL link.
+*
+* @author Animal <extjs support team>
+*
+*/
+$.extend($.fn.datagrid.methods, {
+   getExcelXml: function (jq, param) {
+   	 // Calculate cell data types and extra class names which affect formatting
+   	var rows = $(jq).datagrid('getRows');
+       var cfs = $(jq).datagrid('getColumnFields');
+       var colCount = cfs.length;
+       var colFormatter = [];//用来记录列的自定义函数，以便用formmater得到显示的数据，而不是原始数据
+       var resultData='';
+       for(var j=0;j<colCount;j++){
+       	var cOpts = $(jq).datagrid('getColumnOption', cfs[j]);
+       	colFormatter[j] = cOpts.formatter;
+       	if(typeof cOpts.title != 'undefined' && cOpts.title != '' &&  cOpts.title != '身份证号'){
+       		resultData=resultData+cOpts.title;
+       	}
+
+       	if((j<(colCount-1)) && (j !=3)){
+            resultData=resultData+"CSeparation--";
+       	}
+   	}
+       resultData=resultData+"LSeparation--";
+       if(rows!=null){
+	        for (var i = 0, it = rows, l = it.length; i < l; i++) {
+	            var r = it[i];
+	            for (var j = 0; j < colCount; j++) {//应该从0开始遍历
+	                if (cfs[j] != '') {
+	                    var v = r[cfs[j]];
+	                    var tdata = colFormatter[j] ? colFormatter[j](v, r, i) : v;//判断列是否有formatter，有调用formatter得到原始数据
+	                    if(tdata==null){
+	                		tdata='';
+	                	}
+	                    if(typeof tdata != 'undefined' && tdata != ''&&tdata !=null && tdata.length != 18) {
+	                    	tdata = tdata.toString().replace(/<[^>]+>/g,"");
+                            resultData=resultData+tdata;
+	                    }
+
+	                }
+	                if((j<(colCount-1)) && (j !=3)){
+	        			resultData=resultData+"CSeparation--";
+	        		}
+	            }
+	            if(i<(rows.length-1)){
+	        		resultData=resultData+"LSeparation--";
+	        	}
+	        }
+       }
+       return resultData;
+	}
+});
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

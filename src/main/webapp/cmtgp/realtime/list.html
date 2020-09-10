@@ -1,0 +1,259 @@
+<#include "/common/head.html"/>
+<body class="easyui-layout">
+    <div data-options="region:'north'" style="height:400px">
+       <div id="tb" style="padding:2px 5px;">
+        <div class="wrap_search">
+            	<span class="search_item">
+	            	<span class="item_text">开始日期: </span>
+	            	<span class="item_obj">
+	            		<input class="easyui-datebox" editable="fasle" name="statDate" id="statDate" value=""/>
+	            	</span>    
+	            </span>
+	            <span class="search_item">
+	            	<span class="item_text">结束日期: </span>
+	            	<span class="item_obj">
+	            		<input class="easyui-datebox" editable="fasle" name="endDate" id="endDate" value=""/>
+	            	</span>    
+	            </span>
+			        		
+	        </div>
+	        <div style="text-align: left; margin:6px;">
+	            <div id="searchBtnWrap" style="float:right; padding-right:40px;">
+	                <a href="javascript:void(0)" class="easyui-linkbutton color1" iconCls="glyphicon-search" onclick="ajaxStatistics(this)">搜索</a>
+	                <a href="javascript:void(0)" class="easyui-linkbutton color2" iconCls="glyphicon-repeat" onclick="flushPage()">重置</a>
+	            </div>
+	        </div>
+	    </div>
+     	<div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'west'" style="width:30%;">
+            	 <div id="upie" style="height:300px;"></div>
+            </div>
+            <div data-options="region:'center'" style="width:40%;">
+            	 <div id="mpie" style="height:300px;"></div>
+            </div>
+            <div data-options="region:'east'" style="width:30%">
+            	 <div id="tpie" style="height:300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'center'">
+       <div id="bar" style="width: 300px;height:300px;"></div>
+    </div>
+</body>
+
+<script type="text/javascript">
+var myChartBar = echarts.init(document.getElementById('bar'));
+var myChartUpie = echarts.init(document.getElementById('upie'));
+var myChartTpie = echarts.init(document.getElementById('tpie'));
+var myChartMpie = echarts.init(document.getElementById('mpie'));
+$(function() {
+	ajaxStatistics();
+});
+function ajaxStatistics(){
+	$.ajax({
+		url: '${basePath}/realtime/transactionStatistics?statDate='+$("#statDate").datebox("getValue")+'&endDate='+$("#endDate").datebox("getValue"),
+		type:'POST',
+	    async: false,
+		success:function(data){
+			if(data != null || data == ''){
+				var rows=eval(data); 
+				myChartUpie.setOption({
+					 title: {
+					        text: '支付情况统计',
+					        subtext: '纯属虚构',
+					        left: 'center'
+					    },
+					    tooltip: {
+					        trigger: 'item',
+					        formatter: '{a} <br/>{b} : {c} ({d}%)'
+					    },
+					    legend: {
+					        orient: 'vertical',
+					        left: 'left',
+					        data: ['已支付', '未支付']
+					    },
+					    series: [
+					        {
+					            name: '成交量统计',
+					            type: 'pie',
+					            radius: '55%',
+					            center: ['50%', '60%'],
+					            data: [
+					                {value: rows.paidNum, name: '已支付'},
+					                {value: rows.unpaidNum, name: '未支付'}
+					            ],
+					            emphasis: {
+					                itemStyle: {
+					                    shadowBlur: 10,
+					                    shadowOffsetX: 0,
+					                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+					                }
+					            }
+					        }
+					    ]
+				});
+				myChartTpie.setOption({
+					 title: {
+					        text: '订单配送统计',
+					        subtext: '纯属虚构',
+					        left: 'center'
+					    },
+					    tooltip: {
+					        trigger: 'item',
+					        formatter: '{a} <br/>{b} : {c} ({d}%)'
+					    },
+					    legend: {
+					        orient: 'vertical',
+					        left: 'left',
+					        data: ['待发送', '配送中', '已送达', '已关闭',]
+					    },
+					    series: [
+					        {
+					            name: '成交量统计',
+					            type: 'pie',
+					            radius: '55%',
+					            center: ['50%', '60%'],
+					            data: [
+					                {value: rows.consignment, name: '代发货'},
+					                {value: rows.distribution, name: '配送中'},
+					                {value: rows.delivered, name: '已送达'},
+					                {value: rows.closed, name: '已关闭'}
+					            ],
+					            emphasis: {
+					                itemStyle: {
+					                    shadowBlur: 10,
+					                    shadowOffsetX: 0,
+					                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+					                }
+					            }
+					        }
+					    ]
+				});
+			}
+		},
+		error:function(data){
+			top.showEasyUIErrorMessage('提示','数据获取异常');
+		}
+	});
+
+	$.ajax({
+		url: '${basePath}/realtime/commodityStatistics?statDate='+$("#statDate").datebox("getValue")+'&endDate='+$("#endDate").datebox("getValue"),
+		type:'POST',
+	    async: false,
+		success:function(data){
+			if(data != null || data == ''){
+				var rows=eval(data);  
+				myChartBar.setOption({
+						    title: {
+						        text: '商品售卖情况'
+						    },
+						    tooltip: {},
+						    xAxis: {
+						        data: rows.axxis
+						    },
+						    yAxis: {},
+						    series: [{
+						        name: '商品',
+						        type: 'bar',
+						        data: rows.values
+						    }]
+				})
+			}
+		},
+		error:function(data){
+			top.showEasyUIErrorMessage('提示','数据获取异常');
+		}
+	});
+	$.ajax({
+		url: '${basePath}/realtime/trendStatistics?statDate='+$("#statDate").datebox("getValue")+'&endDate='+$("#endDate").datebox("getValue"),
+		type:'POST',
+	    async: false,
+		success:function(data){
+			if(data != null || data == ''){
+				var rows=eval(data);  
+				myChartMpie.setOption({
+						title: {
+					        text: '最近周趋势数据统计'
+					    },
+					  tooltip: {
+					        trigger: "axis"
+					    },
+					    legend: {
+					        data: ["访问量", "交易量"]
+					    },
+					    toolbox: {
+					        show: false,
+					        feature: {
+					            mark: {
+					                show: true
+					            },
+					            dataView: {
+					                show: true,
+					                readOnly: true
+					            },
+					            magicType: {
+					                show: false,
+					                type: ["line", "bar", "stack", "tiled"]
+					            },
+					            restore: {
+					                show: true
+					            },
+					            saveAsImage: {
+					                show: true
+					            }
+					        }
+					    },
+					    calculable: true,
+					    xAxis: [
+					        {
+					            type: "category",
+					            boundaryGap: false,
+					            data: rows.date
+					        }
+					    ],
+					    yAxis: [
+					        {
+					            type: "value"
+					        }
+					    ],
+					    series: [
+					        {
+					            name: "访问量",
+					            type: "line",
+					            stack: "总量",
+					            itemStyle: {
+					                normal: {
+					                    areaStyle: {
+					                        type: "default"
+					                    }
+					                }
+					            },
+					            data: rows.visitsTotal
+					        },
+					        {
+					            name: "交易量",
+					            type: "line",
+					            stack: "总量",
+					            itemStyle: {
+					                normal: {
+					                    areaStyle: {
+					                        type: "default"
+					                    }
+					                }
+					            },
+					            data: rows.transactionTatal
+					        }
+					    ]
+				})
+			}
+		},
+		error:function(data){
+			top.showEasyUIErrorMessage('提示','数据获取异常');
+		}
+	});
+}
+
+// 使用刚指定的配置项和数据显示图表。
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

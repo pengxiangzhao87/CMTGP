@@ -1,0 +1,134 @@
+<#include "/common/head.html"/>   
+<div class="easyui-layout" data-options="fit:true">
+	<div data-options="region:'center',border:false,split:false"
+		style="padding: 10px 17px 10px 0px; border-left: 1px solid #d4d4d4">
+    <table id="dg"></table>
+    <div id="tb" style="padding:2px 5px;">
+        <div class="wrap_search">
+		        		
+			            	<span class="search_item">
+				            	<span class="item_text">接口名称: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="interface_name" id="interface_name" value=""/>
+				            	</span>    
+				            </span>
+				            <span class="search_item">
+				            	<span class="item_text">接口描述: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="interface_desc" id="interface_desc" value=""/>
+				            	</span>    
+				            </span>
+		        		
+        </div>
+        <div style="text-align: left; margin:6px;">
+            <a href="#" class="easyui-linkbutton addBtn" iconCls="glyphicon-plus" plain="true" onclick="add()">增加</a>
+            <a href="#" class="easyui-linkbutton updateBtn" iconCls="glyphicon-pencil" plain="true" onclick="update()">编辑</a>
+            <a href="#" class="easyui-linkbutton delBtn" iconCls="glyphicon-remove" plain="true" onclick="del()">删除</a>
+            <div id="searchBtnWrap" style="float:right; padding-right:40px;">
+                <a href="javascript:void(0)" class="easyui-linkbutton color1" iconCls="glyphicon-search" onclick="zcurdSearch(this)">搜索</a>
+                <a href="javascript:void(0)" class="easyui-linkbutton color2" iconCls="glyphicon-repeat" onclick="flushPage()">重置</a>
+            </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+<script type="text/javascript">
+var datagrid = $("#dg");
+
+var dgOptions = {
+        rownumbers:true,
+    	fit:true,
+    	border:false,
+        rownumbers:true,
+    	url:'listData',
+    	method:'post',
+    	toolbar:'#tb',
+    	pageSize: 20,
+    	pagination:true,
+    	multiSort:true,
+        queryParams: getInitParam(),
+        columns: [[
+		         {field:'id', checkbox:true}
+	           	 ,{field:'interface_name', title: '接口名称', width:120, sortable: true}
+	           	 ,{field:'interface_desc', title: '接口名称', width:120, sortable: true}
+	           	 ,{field:'execute_sql', title: '执行sql', width:120, sortable: true}
+	           	,{field:'return_field', title: '返回字段', width:120, sortable: true}
+	           	 ,{field:'interface_parameter', title: '入参字段', width:120, sortable: true}
+	           ]]
+	};
+$(function() {
+	datagrid.datagrid(dgOptions);
+});
+
+function zcurdSearch() {
+	var param = zcurdGetParam();
+	datagrid.datagrid("load", {
+		queryParams: param
+	})
+}
+
+function zcurdGetParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param[$(item).attr("name")] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+function getInitParam() {
+	var param = {};
+	$("#tb :input[user_name]").each(function(i, item) {
+		if($(item).val()) {
+			param["queryParams[" + $(item).attr("name") + "]"] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+var initPara = zcurdGetParam();
+function add() {
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("增加成功！");
+		//datagrid.datagrid("load");
+		location.reload();
+	}
+	top.openWindow("接口配置-增加", "${basePath}/interfaceProxy/addPage", {size: '500x550'});
+}
+
+function update() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].id;
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("更新成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("接口配置-编辑", "${basePath}/interfaceProxy/updatePage?id="+id, {size: '500x550'});
+}
+
+function del() {
+	var ids = [];
+	var flag = 0;
+	$.each(datagrid.datagrid("getSelections"), function(i, item) {
+		ids.push(item.id);
+	});
+	if(ids.length < 1) {
+		showWarnMsg("请选择需要删除的数据！");
+		return;
+	}
+	confirmMsg("确认删除？", function() {
+		$.post("delete", {id: ids}, function(data) {
+			showMsg("删除成功！");
+			location.reload();
+		});
+	});
+}
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

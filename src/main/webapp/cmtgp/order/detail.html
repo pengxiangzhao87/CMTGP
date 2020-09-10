@@ -1,0 +1,66 @@
+<#include "/common/head.html"/>    
+    <table id="dg"></table>
+<script type="text/javascript">
+var datagrid = $("#dg");
+var dgOptions = {
+        rownumbers:true,
+    	fit:true,
+    	border:false,
+        rownumbers:true,
+    	url:'detailData',
+    	method:'post',
+    	toolbar:'#tb',
+    	pageSize: 20,
+    	pagination:true,
+    	multiSort:true,
+        queryParams: getInitParam(),
+        columns: [[
+		         {field:'id', checkbox:true}
+	           	 ,{field:'s_id', title: '商品名称', width:120, sortable: true}
+	           	 ,{field:'payment_price', title: '单价', width:120, sortable: true}
+	           	 ,{field:'order_num', title: '数量', width:120, sortable: true}
+	           	 ,{field:'is_extra', title: '是否差价', width:120, sortable: true, formatter : function(val, row){
+	                 	if(val == 0){  return '否'} else if(val == 1){return '返还用户'} else {return '用户补差价'}                        
+                 }}
+	           	 ,{field:'extra_price', title: '差价', width:120, sortable: true}
+	           	 ,{field:'chargeback_status', title: '退单处理状态', width:120, sortable: true, formatter : function(val, row){
+	                 	if(val == 1){  return '退单申请'} else if(val == 2){return '成功退单'} else {return '申请驳回'}                        
+                 }}
+	           	 ,{field:'is_change', title: '是否重新发货', width:120, sortable: true, formatter : function(val, row){
+	                 	if(val == 0){  return '否'} else {return '是'}                        
+                 }}
+	           ]]
+	};
+$(function() {
+	datagrid.datagrid(dgOptions);
+});
+
+function zcurdSearch() {
+	var param = zcurdGetParam();
+	datagrid.datagrid("load", {
+		queryParams: param
+	})
+}
+
+function zcurdGetParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param[$(item).attr("name")] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+function getInitParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param["queryParams[" + $(item).attr("name") + "]"] = $(item).val();	
+		}
+	});
+	return param;
+}
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

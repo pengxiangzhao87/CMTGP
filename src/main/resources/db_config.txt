@@ -1,0 +1,5 @@
+devMode = false
+
+base_jdbcUrl = jdbc:mysql://47.94.248.111/CMTGP?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true
+base_user = root
+base_password = toceltest

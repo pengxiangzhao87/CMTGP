@@ -1,0 +1,327 @@
+<#include "/common/head.html"/>    
+<div class="easyui-layout" data-options="fit:true">
+<input type="hidden"  name="orgId"  id="orgId"/>
+	<div id="tree_box"
+		data-options="region:'west',split:false,border:false"
+		style="width: 288px; padding: 10px 10px 10px 15px;">
+		<ul id="tree1"></ul>
+	</div> 
+	<div data-options="region:'center',border:false,split:false"
+		style="padding: 10px 17px 10px 0px; border-left: 1px solid #d4d4d4">  
+    <table id="dg"></table>
+    <div id="tb" style="padding:2px 5px;">
+        <div class="wrap_search">
+		        		    <span class="search_item">
+				            	<span class="item_text">人员姓名: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="name" id="name" value=""/>
+				            	</span>    
+				            </span>
+			            	<span class="search_item">
+				            	<span class="item_text">身份证号: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-textbox" type="text" name="IDCard" id="IDCard" value=""/>
+				            	</span>    
+				            </span>
+				            <span class="search_item">
+				            	<span class="item_text">检测时间: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-datebox" editable="fasle" name="findDate" id="findDate" value="Date()"/>
+				            	</span>    
+				            </span>
+				            <span class="search_item">
+				            	<span class="item_text">检测类型: </span>
+				            	<span class="item_obj">
+				            		<input class="easyui-combobox" id="status" name="status" value="" data-options="
+	            				valueField: 'id',
+   								textField: 'text',
+   								fit:true,
+	            				data: [
+	            					{id:'0', text:'正常'}
+	            					,{id:'1', text:'异常'}
+	            				],editable:false,panelHeight:'auto'" />
+				            	</span>    
+				            </span>
+		        		
+        </div>
+        <div style="text-align: left; margin:6px;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-print" plain="true" onclick="codePrint()">导出</a>
+            <div id="searchBtnWrap" style="float:right; padding-right:40px;">
+                <a href="javascript:void(0)" class="easyui-linkbutton color1" iconCls="glyphicon-search" onclick="zcurdSearch(this)">搜索</a>
+                <a href="javascript:void(0)" class="easyui-linkbutton color2" iconCls="glyphicon-repeat" onclick="flushPage()">重置</a>
+            </div>
+        </div>
+        <div class="easyui-panel" title="人员检测统计"
+                    style="height: 50px;width: 100%;">
+	        <table class="table1" width="100%">
+	          	<tr >
+	         		<th>总人数</th>
+	    			<td class="a_left"  id="TotalNum">
+	    			</td>
+	           		<th>未检测人数</th>
+	    			<td class="a_left"  id="UndetectedNum">
+	    			</td>
+	    			<th>已检测人数</th>
+	    			<td class="a_left"  id="CheckedsNum">
+	    			</td>
+	    			<th>检测次数</th>
+	    			<td class="a_left"  id="CheckedNum">
+	    			</td>
+	    			<th>检测正常人数</th>
+	    			<td class="a_left"  id="normalNum">
+	    			</td>
+	    			<th>检测异常人数</th>
+	    			<td class="a_left" width="12%" id="abnormalNum">
+	    			</td>
+	           	</tr>
+	        </table>
+		</div>
+    </div>
+   </div>
+  </div>
+<script type="text/javascript">
+var datagrid = $("#dg");
+
+var dgOptions = {
+        rownumbers:true,
+    	fit:true,
+    	border:false,
+        rownumbers:true,
+    	url:'listData',
+    	method:'post',
+    	toolbar:'#tb',
+    	pageSize: 20,
+    	pagination:true,
+    	multiSort:true,
+        queryParams: getInitParam(),
+        columns: [[
+		         {field:'c_id', checkbox:false}
+	           	 ,{field:'org_name', title: '所属机构', width:120, sortable: true}
+	           	 ,{field:'name', title: '姓名', width:200, sortable: true}
+	           	 ,{field:'sex', title: '性别', width:200, sortable: true ,formatter : function(val, row){
+	                 	if(val == true){  return '男'} else {return '女'}                        
+	                 }}
+	           	 ,{field:'IDCard', title: '身份证号', width:150, sortable: true}
+	           	 ,{field:'normalNum', title: '检测正常数量', width:150, sortable: true}
+	           	 ,{field:'abnormalNum', title: '检测异常数量', width:150, sortable: true}
+	           	 ,{field:'createTime',title:'时间',width:150, sortable: true}
+			     ,{field:'out',title:'结果',width:150, sortable: true}
+	           ]],
+	    onDblClickRow:function(rowIndex, rowData){  
+	    	var IDC = "\""+rowData.IDCard+"\"";
+	    	top.openWindow("人员温度检测-详情", "Interface/detailPage?IDCard="+IDC+"&findDate="+$("#findDate").datebox("getValue"), {size: '1000x800'});
+       	}
+	};
+$(function() {
+	datagrid.datagrid(dgOptions);
+	$("#tree1").ligerTree({ 
+    	url: '${basePath}/user/listOrgsJson',
+    	idFieldName :'org_id',
+        parentIDFieldName :'org_pid', 
+        textFieldName : 'org_name',
+        checkbox:false,
+        autoCheckboxEven: true, nodeWidth:150, ajaxType: 'get',
+        
+        slide:false,
+        onSelect: function (node, e)
+        { 
+        	var orgId = node.data.org_id;
+        	$("#orgId").val(orgId);
+        	var params = [
+           	           {"orgId":orgId,
+           	        	"IDCard":$("#IDCard").val(),
+           	        	"name":$("#name").val(),
+           	        	"findDate":$("#findDate").datebox("getValue"),
+           	        	"status":$("#status").combobox("getValue")}
+           	           ];
+        	datagrid.datagrid("load", {queryParams: params})
+        	ajaxStatistics();
+        	return false;        	
+        	
+        }
+    });
+    manager = $("#tree1").ligerGetTreeManager();
+    ajaxStatistics();
+});
+
+function ajaxStatistics(){
+	$.ajax({
+    	url: '${basePath}/Interface/getStatistics?orgId='+$("#orgId").val()+'&IDCard='+$("#IDCard").val()+'&findDate='+$("#findDate").datebox("getValue")+'&name='+$("#name").val(),
+		type:'POST',
+        async: false,
+		success:function(data){
+			if(data != null || data == ''){
+				document.getElementById('TotalNum').innerText=data.TotalNum;
+				document.getElementById('UndetectedNum').innerText=data.UndetectedNum;
+				document.getElementById('CheckedNum').innerText=data.CheckedNum;
+				document.getElementById('normalNum').innerText=data.normalNum;
+				document.getElementById('abnormalNum').innerText=data.abnormalNum;
+				document.getElementById('CheckedsNum').innerText=data.CheckedsNum;
+			}
+		},
+		error:function(data){
+			top.showEasyUIErrorMessage('提示','数据获取异常');
+		}
+	});
+}
+function zcurdSearch() {
+	var param = zcurdGetParam();
+	datagrid.datagrid("load", {
+		queryParams: param
+	});
+	ajaxStatistics();
+}
+
+function zcurdGetParam() {
+	var param = {orgId:$("#orgId").val()};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param[$(item).attr("name")] = $(item).val();	
+		}
+	});
+	return param;
+}
+
+function getInitParam() {
+	var param = {};
+	$("#tb :input[name]").each(function(i, item) {
+		if($(item).val()) {
+			param["queryParams[" + $(item).attr("name") + "]"] = $(item).val();	
+		}
+	});
+	return param;
+}
+function detail(){
+	top.openWindow("人员温度检测-详情", "${basePath}/Interface/detailPage?" + $.param(initPara), {size: '400x300'});
+}
+var initPara = zcurdGetParam();
+function add() {
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("增加成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("用户管理-增加", "${basePath}/Interface/addPage?" + $.param(initPara), {size: '400x300'});
+}
+
+function update() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].id;
+	top.window.subPage.loadCurrDatagrid = function() {
+		showMsg("更新成功！");
+		datagrid.datagrid("load");
+	}
+	top.openWindow("用户管理-编辑", "updatePage?id=" + id, {size: '400x300'});
+}
+
+function del() {
+	var ids = [];
+	$.each(datagrid.datagrid("getSelections"), function(i, item) {
+		ids.push(item.user_account);
+	});
+	if(ids.length < 1) {
+		showWarnMsg("请选择需要删除的数据！");
+		return;
+	}
+	confirmMsg("确认删除？", function() {
+		$.post("delete", {id: ids}, function(data) {
+			showMsg("删除成功！");
+			datagrid.datagrid("load");
+		});
+	});
+}
+
+function detail() {
+	var rowsSel = datagrid.datagrid("getSelections");
+	if(rowsSel.length != 1) {
+		showWarnMsg("请选择一条数据！");
+		return;
+	}
+	var id = rowsSel[0].id;
+	top.openWindow("用户管理-详情", "detailPage?id=" + id, {size: '400x300'});
+}
+function codePrint() {
+	 var fileName = "人员体温检测数据-列表导出表";
+	 var data = $('#dg').datagrid('getExcelXml', { title: fileName }); //获取datagrid数据对应的excel需要的xml格式的内容
+	 var tempForm = document.createElement("form");
+		tempForm.action="${basePath}/Interface/exportDatagrId";
+		tempForm.method="post";
+		document.body.appendChild(tempForm);
+		//create a submit button
+		var tempInput = document.createElement("input");
+		tempInput.type="hidden";
+		tempInput.name="data";
+		tempInput.value=data; //the parameter of method in the code of DispatchAction.
+		var tempFileName = document.createElement("input");
+		tempFileName.type="hidden";
+		tempFileName.name="filename";
+		tempFileName.value=fileName; 
+		tempForm.appendChild(tempInput);        //submit the form
+		tempForm.appendChild(tempFileName);
+		tempForm.submit();
+}
+
+/**
+Jquery easyui datagrid js导出excel
+修改自extgrid导出excel
+* allows for downloading of grid data (store) directly into excel
+* Method: extracts data of gridPanel store, uses columnModel to construct XML excel document,
+* converts to Base64, then loads everything into a data URL link.
+*
+* @author Animal <extjs support team>
+*
+*/
+$.extend($.fn.datagrid.methods, {
+   getExcelXml: function (jq, param) {
+   	 // Calculate cell data types and extra class names which affect formatting
+   	var rows = $(jq).datagrid('getRows');
+       var cfs = $(jq).datagrid('getColumnFields');
+       var colCount = cfs.length;
+       var colFormatter = [];//用来记录列的自定义函数，以便用formmater得到显示的数据，而不是原始数据
+       var resultData='';
+       for(var j=0;j<colCount;j++){
+       	var cOpts = $(jq).datagrid('getColumnOption', cfs[j]);
+       	colFormatter[j] = cOpts.formatter;
+       	if(typeof cOpts.title != 'undefined' && cOpts.title != '' && cOpts.title != '身份证号'){
+       		resultData=resultData+cOpts.title;
+       	}
+       	if((j<(colCount-1))&& (j !=4)){
+       		resultData=resultData+"CSeparation--";
+       	}
+   	}
+       resultData=resultData+"LSeparation--";
+       if(rows!=null){
+	        for (var i = 0, it = rows, l = it.length; i < l; i++) {
+	            var r = it[i];
+	            for (var j = 0; j < colCount; j++) {//应该从0开始遍历
+	                if (cfs[j] != '') {
+	                    var v = r[cfs[j]];
+	                    var tdata = colFormatter[j] ? colFormatter[j](v, r, i) : v;//判断列是否有formatter，有调用formatter得到原始数据
+	                    if(tdata==null){
+	                		tdata='';
+	                	}else if(tdata == 0){
+							tdata = '0'
+						}
+						if(typeof tdata != 'undefined' && tdata != ''&&tdata !=null && tdata.length != 18) {
+							tdata = tdata.toString().replace(/<[^>]+>/g,"");
+							resultData=resultData+tdata;
+						}
+	                }
+					if((j<(colCount-1)) && (j !=4)){
+						resultData=resultData+"CSeparation--";
+					}
+	            }
+	            if(i<(rows.length-1)){
+	        		resultData=resultData+"LSeparation--";
+	        	}
+	        }
+       }
+       return resultData;
+	}
+});
+</script>
+<#include "/common/dialogWindow.html"/>
+<#include "/common/foot.html"/>

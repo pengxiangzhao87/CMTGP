@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+         updateCheck="false">
+
+    <diskStore path="java.io.tmpdir"/>
+
+    <cache name="miniProgram"
+           diskPersistent="true"
+           maxEntriesLocalHeap="10000"
+           maxEntriesLocalDisk="1000"
+           eternal="true"
+           overflowToDisk="true"
+           diskSpoolBufferSizeMB="20"
+           timeToIdleSeconds="300"
+           timeToLiveSeconds="100"
+           memoryStoreEvictionPolicy="LFU"
+           transactionalMode="off"
+    />
+
+</ehcache>

@@ -1,0 +1,76 @@
+<#include "/common/head.html"/>    
+ <div class="easyui-panel addPage" data-options="fit:true,border:false,novalidate:true">
+    <form class="easyui-form" id="ff" method="post" data-options="novalidate:true">
+        <table class="table1">
+            <tr>
+           		<th><span>接口名称：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text"  name="interface_name" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            <tr>
+           		<th><span>接口描述：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text"  name="interface_desc" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>执行sql：</span></th>
+               	<td>
+               		<div class="wrap_input" style="height:50px"><input class="easyui-textbox" type="text" name="execute_sql" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>返回字段描述：</span></th>
+               	<td>
+               		<div class="wrap_input" style="height:50px"><input class="easyui-textbox" type="text" name="return_field" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>入参字段：</span></th>
+               	<td>
+               		<div class="wrap_input" style="height:50px"><input class="easyui-textbox" type="text" multiline="true" name="interface_parameter" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+top.window.subPage.save = save;
+function save(successFunc) {
+	$('#ff').form('submit',
+			{
+				url : "add",
+				type:'POST',
+				data:getParam(),
+				onSubmit : function() { //表单提交前的回调函数 
+					var isValid = $(this).form('validate');//验证表单中的一些控件的值是否填写正确，比如某些文本框中的内容必须是数字 
+					return isValid; // 如果验证不通过，返回false终止表单提交 
+				},
+				success : function(data) {  
+					top.window.closeWindow();
+					top.window.subPage.loadCurrDatagrid();
+				}
+			});
+}
+function getParam() {
+	var param = {
+	   		"model.interface_name": $(":input[name='interface_name']").val(),
+	   		"model.interface_desc": $(":input[name='interface_desc']").val(), 
+	   		"model.execute_sql": $(":input[name='execute_sql']").val(),
+	   		"model.return_field": $(":input[name='return_field']").val(),
+	   		"model.interface_parameter": $(":input[name='interface_parameter']").val()
+	}
+	for(key in param) {
+		if(!param[key]) {
+			delete param[key];
+		}
+	}
+	return param;
+}
+
+</script>
+<#include "/common/foot.html"/>

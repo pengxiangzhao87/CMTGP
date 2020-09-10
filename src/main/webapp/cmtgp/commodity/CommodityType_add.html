@@ -1,0 +1,55 @@
+<#include "/common/head.html"/>    
+ <div class="easyui-panel addPage" data-options="fit:true,border:false,novalidate:true">
+    <form class="easyui-form" id="ff" method="post" data-options="novalidate:true">
+        <table class="table1">
+            <tr>
+           		<th><span>商品分类代码：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="t_type" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            <tr>
+           		<th><span>商品分类名称：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="t_name" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>上级分类代码：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="p_code" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+top.window.subPage.save = save;
+function save(successFunc) {
+	if($("#ff").form('enableValidation').form('validate')) {
+		$.post("addCommodityType", getParam(), function(data) {
+			if(successFunc) {
+				successFunc();
+			}
+			top.window.closeWindow();
+			top.window.subPage.loadCurrDatagrid();
+		});
+	}
+}
+function getParam() {
+	var param = {
+   	    "model.t_type": $(":input[name='t_type']").val(), 
+   		"model.t_name": $(":input[name='t_name']").val(),
+   		"model.p_code": $(":input[name='p_code']").val()
+	}
+	for(key in param) {
+		if(!param[key]) {
+			delete param[key];
+		}
+	}
+	return param;
+}
+
+</script>
+<#include "/common/foot.html"/>

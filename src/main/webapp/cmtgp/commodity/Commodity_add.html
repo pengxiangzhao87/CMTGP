@@ -1,0 +1,199 @@
+<#include "/common/head.html"/>
+ <div class="easyui-panel addPage" data-options="fit:true,border:false,novalidate:true">
+    <form id="ff" action="${basePath}/commodity/addCommodity" method="post" enctype="multipart/form-data">
+        <table class="table1">
+            <tr>
+           		<th><span>商品供应商：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="pid" name="model.p_id" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            <tr>
+           		<th><span>商品分类：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="tid" name="model.t_id" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            </tr>
+			<tr>
+				<th><span>参加活动：</span></th>
+				<td>
+					<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="aid" name="model.is_active" value="" data-options="fit:true,required:true"></input></div>
+				</td>
+			</tr>
+            <tr>
+           		<th><span>商品名称：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.s_name" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+			<tr id="orginalPrice">
+				<th><span>原价：</span></th>
+				<td>
+					<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.original_price" value="0" data-options="fit:true"></input></div>
+				</td>
+			</tr>
+            <tr>
+           		<th><span>商品价格：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.s_price" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>商品单位：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.s_unit" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>单价：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.price_unit" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            </tr>
+            <tr>
+           		<th><span>初始购买数量：</span></th>
+               	<td>
+               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.init_num" value="" data-options="fit:true,required:true"></input></div>
+           		</td>
+            </tr>
+            <tr>
+           		<th><span>售卖类型：</span></th>
+               	<td>
+					<div class="wrap_input">
+		               		<select id="cc" class="easyui-combobox" name="model.init_unit" panelHeight="auto" data-options="fit:true,required:true">
+							    <option value="0">重量</option>
+							    <option value="1">个数</option>
+							</select>
+	               		</input>
+               		</div>           		
+               	</td>
+            </tr>
+
+			<tr>
+				<th><span>商品图片：</span></th>
+				<td>
+					<div class="wrap_input">
+						<input class="easyui-filebox" multiple="multiple" type="text" name="model.s_address_img" value="" data-options="fit:true,required:true" accept="image/gif,image/jpg,image/png,image/jpeg" ></input>
+					</div>
+				</td>
+
+			</tr>
+			<tr>
+				<th><span>商品视频：</span></th>
+				<td>
+					<div class="wrap_input"><input class="easyui-filebox" type="text" name="model.s_address_video" value="" data-options="fit:true" accept="audio/mpeg,audio/mp4,video/mp4"></input></div>
+				</td>
+			</tr>
+            <tr>
+           		<th><span>商品描述：</span></th>
+               	<td>
+               		<div class="wrap_input">
+						<input class="easyui-filebox" multiple="multiple" type="text" name="model.s_desc" value="" data-options="fit:true,required:true" accept="image/gif,image/jpg,image/png,image/jpeg" ></input>
+					</div>
+
+           		</td>
+           		
+            </tr>
+            <tr>
+           		<th><span>商品销售说明：</span></th>
+               	<td>
+               		<div class="wrap_input">
+						<input class="easyui-filebox" multiple="multiple" type="text" name="model.sales_desc" value="" data-options="fit:true" accept="image/gif,mage/jpeg,image/jpeg,image/jpeg" ></input>
+               		</input>
+               		</div>
+           		</td>
+
+            </tr>
+            <tr>
+           		<th><span>是否可下单：</span></th>
+               	<td>
+               		<div class="wrap_input">
+	               		<select id="cc" class="easyui-combobox" name="model.state" panelHeight="auto" data-options="fit:true,required:true">
+						    <option value="1">是</option>
+						    <option value="0">否</option>
+						</select>
+               		</input></div>
+           		</td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script>
+
+$(function() {
+	$('#tid').combobox({
+	    url:'${basePath}/commodity/getCommodityList?type=commodity',
+	    valueField:'id',
+	    textField:'text'
+	});
+
+	$('#pid').combobox({
+	    url:'${basePath}/commodity/getCommodityList?type=commoditytype',
+	    valueField:'id',
+	    textField:'text'
+	});
+    $('#aid').combobox({
+        url:'${basePath}/commodity/getCommodityList?type=isActive',
+        valueField:'id',
+        textField:'text',
+        onSelect:function(e){
+            if(e.id==3){
+                $('#orginalPrice').show();
+            }else{
+                $('#orginalPrice').hide();
+            }
+        }
+    });
+    $('#orginalPrice').hide();
+});
+top.window.subPage.save = save;
+function save(successFunc) {
+	$('#ff').form('submit',
+		{
+			url : "addCommodity",
+			type:'POST',
+			data:getParam(),
+			onSubmit : function() { //表单提交前的回调函数
+			    if($('#aid').val()==3 && $(":input[name='is_active']").val()==''){
+                    showWarnMsg("原价不能为空！");
+			        return false;
+				}
+				var isValid = $(this).form('validate');//验证表单中的一些控件的值是否填写正确，比如某些文本框中的内容必须是数字
+				return isValid; // 如果验证不通过，返回false终止表单提交
+			},
+			success : function(data) {
+				top.window.closeWindow();
+				top.window.subPage.loadCurrDatagrid();
+			}
+		});
+}
+function getParam() {
+	var param = {
+   	    "model.p_id": $(":input[name='p_id']").val(), 
+   		"model.t_id": $(":input[name='t_id']").val(),
+   		"model.s_name": $(":input[name='s_name']").val(), 
+   		"model.s_price": $(":input[name='s_price']").val(),
+   		"model.s_unit": $(":input[name='s_unit']").val(), 
+   		"model.price_unit": $(":input[name='price_unit']").val(),
+   		"model.init_num": $(":input[name='init_num']").val(), 
+   		"model.init_unit": $(":input[name='init_unit']").val(),
+   		"model.s_desc": $(":input[name='s_desc']").val(),
+   		"model.sales_desc": $(":input[name='sales_desc']").val(),
+   		"model.s_address_img": $(":input[name='s_address_img']").val(),
+   		"model.s_address_video": $(":input[name='s_address_video']").val(),
+   		"model.is_active": $(":input[name='is_active']").val(),
+   		"model.original_price": $(":input[name='original_price']").val(),
+   		"model.state": $(":input[name='state']").val()
+	}
+	for(key in param) {
+		if(!param[key]) {
+			delete param[key];
+		}
+	}debugger;
+	return param;
+}
+
+</script>
+<#include "/common/foot.html"/>
