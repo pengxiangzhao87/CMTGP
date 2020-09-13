@@ -423,7 +423,7 @@ public class OrderService {
 		Integer isExtra = orderDetail.getIsExtra();
 		BigDecimal extraPrice = orderDetail.getExtraPrice();
 		//商户退回过差价
-		if(backPriceStatus!=null && backPriceStatus==1 && isExtra==1){
+		if(backPriceStatus!=null && (backPriceStatus==2 || backPriceStatus==3) && isExtra==1){
 			paymentPrice = paymentPrice.subtract(extraPrice);
 		}
 		String refundFee = paymentPrice.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString();

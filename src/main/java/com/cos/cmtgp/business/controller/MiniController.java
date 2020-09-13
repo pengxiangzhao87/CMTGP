@@ -299,6 +299,7 @@ public class MiniController extends BaseController {
                                 Integer extraStatus = recordList.get(0).getInt("extra_status");
                                 if(extraStatus==2 || extraStatus==3){
                                     Db.update("update t_order_basic set extra_status=1,extra_time=now(),extra_transaction_id='"+transactionId+"' where extra_out_trade_no='" + outTradeNo + "'");
+                                    Db.update("update t_order_detail set extra_pay_status=1 where is_extra=2 and o_id="+record.getInt("o_id"));
                                     //发送订阅
                                     this.afterPaySendMessage(recordList,record.getInt("o_id"),2);
                                 }
@@ -506,7 +507,7 @@ public class MiniController extends BaseController {
                         String extraRefundId = record.getStr("extra_refund_id");
                         String extraOutRefundNo = record.getStr("extra_out_refund_no");
                         int totalPrice = record.getBigDecimal("total_price").multiply(new BigDecimal("100")).stripTrailingZeros().intValue();
-                        if(record.getStr("transaction_id").equals(transactionId) && record.getStr("out_trade_no").equals(outTradeNo) && totalFee==totalPrice){
+                        if(record.getStr("transaction_id").equals(transactionId) && record.getStr("out_trade_no").equals(outTradeNo)){
                             /*************分量不足，退款差价**************/
                             if(backRefundId!=null && backOutRefundNo!=null && backRefundId.equals(refundId) && backOutRefundNo.equals(outRefundNo)){
                                 int backPriceStatus = record.getInt("back_price_status");
@@ -600,7 +601,7 @@ public class MiniController extends BaseController {
      */
     private void updateOrderClose(Integer oId,Integer id){
         //查询没有退单完成的
-        List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and chargeback_status<>2 ");
+        List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and (chargeback_status<>2 or chargeback_status is null) ");
         if(orderDetails.size()==0) {
             Db.update("update t_order_basic set order_status=4 where o_id = " + oId);
         }
