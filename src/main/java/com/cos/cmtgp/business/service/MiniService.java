@@ -10,6 +10,8 @@ import com.cos.cmtgp.common.util.MiniUtil;
 import com.cos.cmtgp.common.util.UrlUtil;
 import com.jfinal.aop.Before;
 import com.jfinal.plugin.activerecord.tx.Tx;
+
+import java.security.MessageDigest;
 import java.util.*;
 
 
@@ -43,10 +45,41 @@ public class MiniService {
         reqData.put("mch_id", MiniUtil.MERCHANT_NO);
         reqData.put("nonce_str", rdSeesion);
         reqData.put("sign_type", "MD5");
-        reqData.put("sign", WXPayUtil.generateSignature(reqData, apiSecuret));
+        reqData.put("sign", generateSignature(reqData, apiSecuret));
         String reqBody = WXPayUtil.mapToXml(reqData);
         return UrlUtil.sendPost(MiniUtil.REFUND_ORDER,reqBody,true);
     }
+
+
+    public String generateSignature(final Map<String, String> data, String key) throws Exception {
+        addWXLog(null,null,null,key,data.toString(),new Date());
+        Set<String> keySet = data.keySet();
+        String[] keyArray = keySet.toArray(new String[keySet.size()]);
+        Arrays.sort(keyArray);
+        StringBuilder sb = new StringBuilder();
+        for (String k : keyArray) {
+            if (k.equals(WXPayConstants.FIELD_SIGN)) {
+                continue;
+            }
+            // 参数值为空，则不参与签名
+            if (data.get(k).trim().length() > 0){
+                sb.append(k).append("=").append(data.get(k).trim()).append("&");
+            }
+        }
+        sb.append("key=").append(key);
+        return MD5(sb.toString()).toUpperCase();
+    }
+
+    public static String MD5(String data) throws Exception {
+        java.security.MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] array = md.digest(data.getBytes("UTF-8"));
+        StringBuilder sb = new StringBuilder();
+        for (byte item : array) {
+            sb.append(Integer.toHexString((item & 0xFF) | 0x100).substring(1, 3));
+        }
+        return sb.toString().toUpperCase();
+    }
+
 
     /**
      * 查询退款
@@ -68,7 +101,7 @@ public class MiniService {
         reqData.put("refund_id",refundId);
         reqData.put("nonce_str",FreemarkUtil.get3rdSeesion(32));
         reqData.put("sign_type", "MD5");
-        reqData.put("sign", WXPayUtil.generateSignature(reqData, apiSecuret));
+        reqData.put("sign", generateSignature(reqData, apiSecuret));
         String reqBody = WXPayUtil.mapToXml(reqData);
         return UrlUtil.sendPost(MiniUtil.CHECK_REFUND_ORDER,reqBody,true);
 
@@ -96,7 +129,7 @@ public class MiniService {
         reqData.put("out_trade_no",outRradeNo);
         reqData.put("nonce_str",rdSeesion);
         reqData.put("sign_type", "MD5");
-        reqData.put("sign", WXPayUtil.generateSignature(reqData, apiSecuret));
+        reqData.put("sign", generateSignature(reqData, apiSecuret));
         String reqBody = WXPayUtil.mapToXml(reqData);
         return UrlUtil.sendPost(MiniUtil.CLOSED_ORDER,reqBody,false);
     }
@@ -124,7 +157,7 @@ public class MiniService {
         reqData.put("out_trade_no",outRradeNo);
         reqData.put("nonce_str",FreemarkUtil.get3rdSeesion(32));
         reqData.put("sign_type", "MD5");
-        reqData.put("sign", WXPayUtil.generateSignature(reqData, apiSecuret));
+        reqData.put("sign", generateSignature(reqData, apiSecuret));
         String reqBody = WXPayUtil.mapToXml(reqData);
         return UrlUtil.sendPost(MiniUtil.CHECK_ORDER,reqBody,false);
     }
@@ -157,7 +190,7 @@ public class MiniService {
             reqData.put("trade_type", "JSAPI");
             reqData.put("openid", openid);
             reqData.put("sign_type", "MD5");
-            reqData.put("sign", WXPayUtil.generateSignature(reqData, apiSecuret));
+            reqData.put("sign", generateSignature(reqData, apiSecuret));
             String reqBody = WXPayUtil.mapToXml(reqData);
             String xmlStr = UrlUtil.sendPost(MiniUtil.UNIFIED_ORDER,reqBody,false);
             this.addWXLog(oId,null,totalFee,"统一下单",xmlStr,new Date());
@@ -186,7 +219,7 @@ public class MiniService {
                 secondData.put("nonceStr",rdSeesion);
                 secondData.put("package","prepay_id="+respData.get("prepay_id"));
                 secondData.put("signType","MD5");
-                secondData.put("paySign",WXPayUtil.generateSignature(signData, apiSecuret));
+                secondData.put("paySign",generateSignature(signData, apiSecuret));
                 return secondData;
             }else {
                 throw new Exception(String.format("return_code value %s is invalid in XML: %s", return_code, xmlStr));

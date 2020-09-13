@@ -125,14 +125,16 @@ public class OrderController extends BaseController {
 	public void toBackPrice(){
 		Integer oId = getParaToInt("oId");
 		String backPrice = getPara("backPrice");
-		Map<String, Object> stringObjectMap = null;
+		boolean stringObjectMap = false;
 		try{
 			stringObjectMap = orderService.toBackPrice(oId, backPrice);
 		}catch(Exception ex){}
-		if((Integer)stringObjectMap.get("code")==1){
+		if(stringObjectMap){
+			renderSuccess();
+		}else{
 			addOpLog("toBackPrice ===> oId="+oId+", backPrice="+backPrice);
+			renderFailed();
 		}
-		renderSuccess(stringObjectMap.get("msg").toString());
 	}
 
 	/**
@@ -448,11 +450,11 @@ public class OrderController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
-			sb.append(" select DISTINCT a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address,max(chargeback_status) as chargeback_status ");
+			sb.append(" select DISTINCT a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address,max(b.chargeback_status) as chargeback_status ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
 			if(status==1){
-				sb.append(" and ((a.order_status="+status+" and b.chargeback_status<>2) or b.chargeback_status=1) ");
+				sb.append(" and (a.order_status="+status+" or b.chargeback_status=1) ");
 			}else{
 				sb.append(" and a.order_status="+status);
 			}

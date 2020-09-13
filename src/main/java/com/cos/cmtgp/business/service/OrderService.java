@@ -233,37 +233,38 @@ public class OrderService {
 	 * 商户返还差价
 	 */
 	@Before(Tx.class)
-	public Map<String,Object> toBackPrice(Integer oId,String backPrice)throws Exception{
-		Map<String,Object> resultMap = new HashMap<String, Object>();
+	public boolean toBackPrice(Integer oId,String backPrice)throws Exception{
 		OrderBasic orderBasic = OrderBasic.dao.findById(oId);
 		Map<String, String> reqData = new HashMap<String, String>();
 		reqData.put("transaction_id", orderBasic.getTransactionId());
 		reqData.put("out_trade_no", orderBasic.getOutTradeNo());
 		String outRefundNo = FreemarkUtil.get3rdSeesion(32);
 		orderBasic.setBackOutRefundNo(outRefundNo);
-		reqData.put("out_refund_no", FreemarkUtil.get3rdSeesion(32));
+		reqData.put("out_refund_no", outRefundNo);
 		String totalFee = orderBasic.getTotalPrice().multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString();
 		reqData.put("total_fee", totalFee);
 		BigDecimal backPriceDecimal = new BigDecimal(backPrice);
 		orderBasic.setTotalBackPrice(backPriceDecimal);
 		String refundFee = backPriceDecimal.multiply(new BigDecimal("100")).stripTrailingZeros().toPlainString();
 		reqData.put("refund_fee", refundFee);
+		reqData.put("notify_url",MiniUtil.REFUND_NOTIFY_URL);
 		//发送返还差价
 		String xmlStr = miniService.refund(reqData);
 		Date now = new Date();
 		miniService.addWXLog(oId,null,Integer.valueOf(refundFee),"商户返还差价",xmlStr,now);
 		Map<String, String> refundResult = WXPayUtil.xmlToMap(xmlStr);
+		boolean flag = false;
 		if(refundResult.get("return_code").equals(WXPayConstants.SUCCESS)) {
 			if (refundResult.get("result_code").equals(WXPayConstants.SUCCESS)) {
 				String refundId = refundResult.get("refund_id");
 				orderBasic.setBackRefundId(refundId);
 				orderBasic.setBackPriceStatus(3);
+				Db.update("update t_order_detail set extra_back_status=3 where is_extra=1 and o_id="+oId);
+				flag = true;
 			}
 		}
 		orderBasic.update();
-		resultMap.put("code",1);
-		resultMap.put("msg","微信退款异常");
-		return resultMap;
+		return flag;
 	}
 
 	/**
