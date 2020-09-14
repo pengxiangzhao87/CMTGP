@@ -48,7 +48,7 @@ public class ShoppingCartService {
      *  查询购物车列表
      */
     public List<Record> queryShoppingCart(Integer userId){
-        String sql = " select c.s_corporate_name,a.id,b.s_id,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(b.s_address_img,'~',1))  as imgUrl,b.s_name,b.state, " +
+        String sql = " select c.s_corporate_name,a.id,b.s_id,SUBSTRING_INDEX(b.s_address_img,'~',1)  as imgUrl,b.s_name,b.state, " +
                 " CONCAT('￥',b.s_price,'/',b.s_unit) as sell,a.s_num,b.price_unit,b.init_unit, " +
                 " round(case b.init_unit when 0 then a.s_num/50*b.price_unit else a.s_num*b.price_unit end,2) as totalPrice,a.is_check " +
                 " from t_shopping_info a " +

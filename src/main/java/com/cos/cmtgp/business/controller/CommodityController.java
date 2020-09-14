@@ -83,7 +83,7 @@ public class CommodityController extends BaseController {
 		Integer userId = getParaToInt("userId");
 		Integer status = getParaToInt("status");
 		try{
-			String sql = " select a.s_id,a.s_name,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(a.s_address_img,'~',1)) as coverUrl,a.init_unit,a.init_num,a.price_unit,c.s_corporate_name, " +
+			String sql = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,c.s_corporate_name, " +
 					" a.s_price,concat('/',a.s_unit) as unit,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
 					" from t_commodity_info a " +
 					" left join t_shopping_info b on a.s_id=b.s_id and b.u_id="+ userId +
@@ -109,7 +109,7 @@ public class CommodityController extends BaseController {
 		Integer userId = getParaToInt("userId");
 		try{
 			List<Record> recordList = new ArrayList<Record>();
-			String sqlOne = " select a.s_id,a.s_name,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(a.s_address_img,'~',1)) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
+			String sqlOne = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
 					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
 					" from t_commodity_info a " +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +
@@ -118,7 +118,7 @@ public class CommodityController extends BaseController {
 					" where p_id=1 and is_active=3 " +
 					" group by a.s_id order by sales desc,a.s_id desc  limit 15 ";
 			recordList.addAll(Db.find(sqlOne));
-			String sqlTwo = " select a.s_id,a.s_name,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(a.s_address_img,'~',1)) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
+			String sqlTwo = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
 					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
 					" from t_commodity_info a " +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +

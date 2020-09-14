@@ -65,32 +65,32 @@ public class OrderController extends BaseController {
 	 */
 	public void sendOrder(){
 		Integer oId = getParaToInt("oId");
-		String token = getPara("token");
-		String openid = CacheKit.get("miniProgram", token);
+		Integer sId = getParaToInt("sId");
 		String sql = " select count(a.o_id) as sum,count(c.s_id) as finish,GROUP_CONCAT(case when c.s_id is null then null else a.id end) as ids,GROUP_CONCAT(a.chargeback_status) as refundStatus,d.total_price,d.consignee_name,d.consignee_phone " +
 				" from t_order_detail a " +
 				" inner join t_order_basic d on a.o_id=d.o_id " +
 				" left join t_commodity_info b on a.s_id=b.s_id " +
-				" left join t_supplier_setting c on b.p_id=c.s_id and c.s_openid='"+openid+"' " +
+				" left join t_supplier_setting c on b.p_id=c.s_id and c.s_id="+sId +
 				" where a.is_send=1 and a.o_id="+oId;
 		List<Record> records = Db.find(sql);
 		Record record = records.get(0);
-		List<String> refundStatus = Arrays.asList(record.getStr("refundStatus").split(","));
-		if(refundStatus.contains("1")){
-			renderSuccess("1");
-		}else{
-			boolean flag = false;
-			try{
-				flag = orderService.sendOrder(oId,record);
-			}catch(Exception ex){}
-			if(flag){
-				renderSuccess();
-			}else{
-				addOpLog("sendOrder ===> oId="+oId);
-				renderFailed();
+		String refundStatus = record.getStr("refundStatus");
+		boolean flag = true;
+		if(refundStatus!=null && !"".equals(refundStatus)){
+			List<String> refundStatusList = Arrays.asList(refundStatus.split(","));
+			if(refundStatusList.contains("1")){
+				flag = false;
+
 			}
 		}
-
+		if(flag){
+			try{
+				orderService.sendOrder(oId,record);
+			}catch(Exception ex){}
+			renderSuccess();
+		}else{
+			renderSuccess("1");
+		}
 	}
 
 	/**
@@ -98,16 +98,16 @@ public class OrderController extends BaseController {
 	 */
 	public void confirmSend(){
 		Integer oId = getParaToInt("oId");
-		String token = getPara("token");
-		String openid = CacheKit.get("miniProgram", token);
-		String sql = "select b.id,d.s_openid,b.is_send,b.chargeback_status " +
+		Integer sId = getParaToInt("sId");
+
+		String sql = "select b.id,d.s_id,b.is_send,b.chargeback_status " +
 				"from t_order_detail b,t_commodity_info c ,t_supplier_setting d " +
 				"where b.s_id=c.s_id and c.p_id=d.s_id and b.o_id="+oId;
 		List<Record> recordList = Db.find(sql);
 		if(recordList.size()>0){
 			boolean flag = false;
 			try {
-				flag = orderService.confirmSend(recordList, openid, oId);
+				flag = orderService.confirmSend(recordList, sId, oId);
 			}catch (Exception ex){}
 			if(flag){
 				renderSuccess();
@@ -454,9 +454,9 @@ public class OrderController extends BaseController {
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
 			if(status==1){
-				sb.append(" and (a.order_status="+status+" or b.chargeback_status=1) ");
+				sb.append(" and (b.is_send="+status+" or b.chargeback_status=1) ");
 			}else{
-				sb.append(" and a.order_status="+status);
+				sb.append(" and b.is_send="+status);
 			}
 			sb.append(" and d.s_id="+sId);
 			sb.append(" group by a.o_id order by a.order_time ASC ");
@@ -479,13 +479,14 @@ public class OrderController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
-			sb.append(" select order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(c.s_address_img,'~',1)) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,concat('https://www.sotardust.cn/CMTGP/upload/',b.extra_img_url) as extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
+			sb.append(" select order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
 			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status ");
 			sb.append("  ,case a.extra_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '待补差价' end as payText " +
 					" ,case a.back_price_status when 1 then '申请退单中' when 2 then '成功退单' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText " +
 					" ,case b.chargeback_status when 1 then '退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '' end as refundBack ");
 			sb.append(" ,case a.payment_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' else '支付失败' end as paymentStatus ");
-			sb.append(" ,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,a.extra_payment,a.extra_time,extra_pay_back_status,a.total_price   ");
+			sb.append(" ,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,a.extra_payment,a.extra_time,extra_pay_back_status,a.total_price ");
+			sb.append(" ,case order_status when 1 then '待发货' when 2 then '待收货' when 3 then '已送达' when 4 then '已关闭' else '已取消' end as orderStatus ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d  ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id="+oId +" and d.s_id="+sId);
 			List<Record> records = Db.find(sb.toString());
@@ -591,16 +592,15 @@ public class OrderController extends BaseController {
 	@Before(Tx.class)
 	public void deletePic(){
 		Integer id = getParaToInt("id");
-		String url = getPara("url");
 		Integer idx = getParaToInt("idx");
 		boolean flag = false;
 		try{
-			flag = orderService.deletePic(id,idx,url);
+			flag = orderService.deletePic(id,idx);
 		}catch(Exception ex){}
 		if(flag){
 			renderSuccess();
 		}else{
-			addOpLog("deletePic ===>id="+id+",url="+url+",idx="+idx);
+			addOpLog("deletePic ===>id="+id+",idx="+idx);
 			renderFailed();
 		}
 	}
@@ -618,10 +618,10 @@ public class OrderController extends BaseController {
 		Integer pageSize = getParaToInt("pageSize");
 
 		try{
-			String select = " select sum(b.payment_price) totalPrice,a.payment_status,case a.order_status when 1 then (case when sum(b.is_send)=count(1) then '待收货' else '待发货' end) when 2 then '待收货' when 3 then '已送达' when 4 then '已关闭' else '待支付' end as status,a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') orderTime,a.consignee_name ";
+			String select = " select sum(b.payment_price) totalPrice,a.payment_status,CASE  when a.order_status=4 then '已取消' else '已送达' END AS STATUS,a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') orderTime,a.consignee_name ";
 			StringBuffer sb = new StringBuffer();
 			sb.append(" from t_order_basic a ,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
-			sb.append(" where a.order_status not in (1,2,5,6) and a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and d.s_id="+sId);
+			sb.append(" where (b.is_send=3 or a.order_status=4) and a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and d.s_id="+sId);
 			if(!"".equals(startDate) && !"".equals(endDate)){
 				sb.append(" and a.order_time>='"+startDate+"' and a.order_time<='"+endDate+"'");
 			}

@@ -206,19 +206,19 @@ public class OrderService {
 	 * 商家确认已送达
 	 */
 	@Before(Tx.class)
-	public boolean confirmSend(List<Record> recordList,String openid,Integer oId){
+	public boolean confirmSend(List<Record> recordList,Integer sId,Integer oId){
 		String ids= "";
-		boolean flag = false;
+		boolean flag = true;
 		for(Record record : recordList){
-			if(record.getStr("s_openid").equals(openid)){
-				ids +=","+record.getStr("id");
+			if(record.getInt("s_id").equals(sId)){
+				ids += record.getStr("id")+",";
 			}else{
 				flag = record.getInt("is_send")==3;
 			}
 		}
 		if(Db.update("update t_order_detail set is_send=3 where id in ("+ids.substring(0,ids.length()-1)+")")>0){
 			if(flag){
-				if(Db.update("update t_order_basic set order_status=3 where o_id="+oId)>0){
+				if(Db.update("update t_order_basic set order_status=3,last_time=now() where o_id="+oId)>0){
 					return true;
 				}
 			}else{
@@ -311,7 +311,7 @@ public class OrderService {
 			for(Record record:paginate.getList()){
 				oIds += record.getStr("o_id") + ",";
 			}
-			String sql = " select a.o_id,REPLACE(group_concat(concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(c.s_address_img,'~',1))),',','~') as imgUrl,a.order_status" +
+			String sql = " select a.o_id,REPLACE(group_concat(SUBSTRING_INDEX(c.s_address_img,'~',1)),',','~') as imgUrl,a.order_status" +
 					" ,case a.order_status when 1 then '待发货' when 2 then '待收货' when 3 then '已送达' when 5 then " +
 					" (case a.payment_status when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '已支付' end ) " +
 					" when 6 then '已取消' else '已关闭' end as status " +
@@ -356,10 +356,10 @@ public class OrderService {
 		if(info.size()>0){
 			Record record = info.get(0);
             resultMap.put("info",record);
-            String sql = "select b.s_id,c.s_corporate_name,a.id,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(b.s_address_img,'~',1)) as imgUrl,concat(b.s_name,'￥',b.s_price,'/',b.s_unit) as name " +
+            String sql = "select b.s_id,c.s_corporate_name,a.id,SUBSTRING_INDEX(b.s_address_img,'~',1) as imgUrl,concat(b.s_name,'￥',b.s_price,'/',b.s_unit) as name " +
                     " ,concat('￥',a.payment_price) as price,case b.init_unit when 0 then concat(a.order_num,'g') else concat(a.order_num,'个') end as num " +
                     " ,case a.is_extra when 2 then concat('实际重量:',a.extra_weight,'g,需支付￥',a.extra_price) when 1 then concat('实际重量:',a.extra_weight,'g,已退还￥',a.extra_price) else '' end as msg " +
-                    " ,a.is_extra,case when a.extra_img_url is null then '' else a.extra_img_url end as extra_img_url,a.chargeback_status " +
+                    " ,a.is_extra,case when a.extra_img_url is null then '' else a.extra_img_url end as extra_img_url,a.chargeback_status,a.extra_back_status ,extra_pay_status " +
 					" ,case a.chargeback_status when 1 then '待退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '申请退款' end as refundBack " +
                     " from t_order_detail a ,t_commodity_info b,t_supplier_setting c where b.p_id=c.s_id and a.s_id=b.s_id and a.o_id="+oId;
             List<Record> records = Db.find(sql);
@@ -531,13 +531,13 @@ public class OrderService {
 	 * 商户删除图片
 	 */
 	@Before(Tx.class)
-	public boolean deletePic(Integer id,Integer idx,String url){
+	public boolean deletePic(Integer id,Integer idx){
 		OrderDetail detail = OrderDetail.dao.findById(id);
 		String[] split = detail.getExtraImgUrl().split("~");
 		String[] remove = ArrayUtil.remove(split, idx);
 		String result = StringUtil.join(remove,"~");
 		detail.setExtraImgUrl(result);
-		if(new File(PathKit.getWebRootPath()+"/upload/"+url).delete()){
+		if(new File(PathKit.getWebRootPath()+"/upload/"+split[idx]).delete()){
 			if(detail.update()){
 				return true;
 			}

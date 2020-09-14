@@ -26,7 +26,7 @@ public class CommodityService {
 	 * @return
 	 */
 	public Page<Record> queryCommodityList(Integer userId,Integer pageNo,Integer pageSize,Integer tId,String sName){
-		String select = " select a.s_id,a.s_name,concat('https://www.sotardust.cn/CMTGP/upload/',SUBSTRING_INDEX(a.s_address_img,'~',1)) as coverUrl,a.init_unit,a.init_num,a.price_unit," +
+		String select = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit," +
 			" a.s_price,a.original_price,a.is_active, " +
 			" concat('/',a.s_unit) as unit, " +
 			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state ";
@@ -53,7 +53,7 @@ public class CommodityService {
 	 * @return
 	 */
 	public Record queryCommodity(Integer sId,Integer userId){
-		String sqlStr = " select a.s_id,a.is_active,a.original_price,a.s_name,concat('https://www.sotardust.cn/CMTGP/upload/',a.s_address_img) as s_address_img,concat('https://www.sotardust.cn/CMTGP/upload/',a.s_address_video) as s_address_video,a.s_desc,a.sales_desc,a.price_unit, " +
+		String sqlStr = " select a.s_id,a.is_active,a.original_price,a.s_name,a.s_address_img,a.s_address_video,a.s_desc,a.sales_desc,a.price_unit, " +
 				" CONCAT('￥',a.s_price) as price, " +
 				" concat('/',a.s_unit) as unit, " +
 				" a.init_num, a.init_unit,a.state, " +

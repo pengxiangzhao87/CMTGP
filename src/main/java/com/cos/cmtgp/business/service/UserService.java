@@ -19,7 +19,7 @@ public class UserService {
 	 * @return
 	 */
 	public Record getMyInfo(Integer userId){
-			String sql = " select c.u_id,c.u_account,c.u_nick_name,c.u_phone,concat('https://www.sotardust.cn/CMTGP/upload/',c.u_avatar_url) as u_avatar_url,c.account_price,c.u_plot,c.u_concern,c.u_fans,c.u_liked,u_content ,REPLACE(group_concat(c.img),',','~') as imgUrl from (" +
+			String sql = " select c.u_id,c.u_account,c.u_nick_name,c.u_phone,c.u_avatar_url,c.account_price,c.u_plot,c.u_concern,c.u_fans,c.u_liked,u_content ,REPLACE(group_concat(c.img),',','~') as imgUrl from (" +
 				" select a.u_id,a.u_account,a.u_nick_name,a.u_phone,a.u_avatar_url,a.account_price,a.u_plot,a.u_concern,a.u_fans,a.u_liked,u_content " +
 				" ,SUBSTRING_INDEX(b.h_address_img,'~',1) as img" +
 				" from t_user_setting a left join t_hotissue_basic b on a.u_id=b.u_id and b.state=0 where a.u_id="+userId +
