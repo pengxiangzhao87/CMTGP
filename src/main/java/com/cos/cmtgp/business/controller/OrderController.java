@@ -408,8 +408,6 @@ public class OrderController extends BaseController {
 	 */
 	public void applyForRefundDetail(){
 		Integer id = getParaToInt("id");
-		String token = getPara("token");
-		String openid = CacheKit.get("miniProgram", token);
 		OrderDetail orderDetail = OrderDetail.dao.findById(id);
 		if(orderDetail.getIsSend()==2){
 			renderSuccess("1");
@@ -431,7 +429,10 @@ public class OrderController extends BaseController {
 			dataDTO.setAmount3(amountMap);
 			dataDTO.setPhrase4(phraseMap);
 			dataDTO.setCharacter_string1(idMap);
-			new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,openid).start();
+			List<Record> recordList = Db.find("select a.s_openid from t_supplier_setting a,t_commodity_info b,t_order_detail c where c.s_id=b.s_id and b.p_id=a.s_id and c.s_id=" + orderDetail.getSId());
+			if(recordList.size()>0){
+				new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
+			}
 			renderSuccess();
 		}
 	}
@@ -453,6 +454,7 @@ public class OrderController extends BaseController {
 			sb.append(" select DISTINCT a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address,max(b.chargeback_status) as chargeback_status ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
+			sb.append(" and a.order_status not in (4,6) ");
 			if(status==1){
 				sb.append(" and (b.is_send="+status+" or b.chargeback_status=1) ");
 			}else{
@@ -479,14 +481,14 @@ public class OrderController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
-			sb.append(" select order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
+			sb.append(" select a.order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
 			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status ");
 			sb.append("  ,case a.extra_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '待补差价' end as payText " +
 					" ,case a.back_price_status when 1 then '申请退单中' when 2 then '成功退单' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText " +
 					" ,case b.chargeback_status when 1 then '退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '' end as refundBack ");
 			sb.append(" ,case a.payment_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' else '支付失败' end as paymentStatus ");
 			sb.append(" ,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,a.extra_payment,a.extra_time,extra_pay_back_status,a.total_price ");
-			sb.append(" ,case order_status when 1 then '待发货' when 2 then '待收货' when 3 then '已送达' when 4 then '已关闭' else '已取消' end as orderStatus ");
+			sb.append(" ,case a.order_status when 1 then '待发货' when 2 then '待收货' when 3 then '已送达' when 4 then '已关闭' else '已取消' end as orderStatus ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d  ");
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id="+oId +" and d.s_id="+sId);
 			List<Record> records = Db.find(sb.toString());

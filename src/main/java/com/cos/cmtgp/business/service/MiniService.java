@@ -52,7 +52,6 @@ public class MiniService {
 
 
     public String generateSignature(final Map<String, String> data, String key) throws Exception {
-        addWXLog(null,null,null,key,data.toString(),new Date());
         Set<String> keySet = data.keySet();
         String[] keyArray = keySet.toArray(new String[keySet.size()]);
         Arrays.sort(keyArray);

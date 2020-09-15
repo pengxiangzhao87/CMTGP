@@ -14,6 +14,7 @@ import com.cos.cmtgp.common.mini.SubscribeMessage;
 import com.cos.cmtgp.common.mini.WXPayConstants;
 import com.cos.cmtgp.common.mini.WXPayUtil;
 import com.cos.cmtgp.common.util.*;
+import com.cos.cmtgp.common.vo.User;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Record;
@@ -191,7 +192,7 @@ public class MiniController extends BaseController {
                 dataDTO.setName1(nameMap);
                 dataDTO.setTime11(timeMap);
                 dataDTO.setCharacter_string2(idMap);
-                new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_SUCCESS_TEMP,2,item.getStr("s_openid")).start();
+                new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_SUCCESS_TEMP,3,item.getStr("s_openid")).start();
                 break;
             }
         }
@@ -445,7 +446,7 @@ public class MiniController extends BaseController {
         dataDTO.setDate2(dateMap);
         dataDTO.setPhrase4(phraseMap);
         dataDTO.setThing4(thingMap);
-        new SubscribeMessage(record.getInt("o_id"), dataDTO,MiniUtil.REFUND_SUCCESS_TEMP,2,record.getStr("u_openid")).start();
+        new SubscribeMessage(record.getInt("o_id"), dataDTO,MiniUtil.REFUND_SUCCESS_TEMP,3,record.getStr("u_openid")).start();
     }
 
 
@@ -636,6 +637,10 @@ public class MiniController extends BaseController {
                     map.put("isPhone",1);
                 }
             }else{
+                UserSetting userSetting = new UserSetting();
+                userSetting.setUOpenid(openid);
+                userSetting.save();
+                map.put("uId",userSetting.getUId());
                 map.put("isPhone",1);
             }
             renderSuccess("",map);
