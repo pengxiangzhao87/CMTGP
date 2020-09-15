@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.*;
 
 public class MiniController extends BaseController {
@@ -437,7 +438,11 @@ public class MiniController extends BaseController {
             thingMap.put("value", "重量不足，退回差价");
         }
         Map<String, Object> dateMap = new HashMap<String, Object>();
-        dateMap.put("value", new Date());
+        try {
+            dateMap.put("value", DateUtil.getDayToString(new Date()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         Map<String, Object> phraseMap = new HashMap<String, Object>();
         phraseMap.put("value", "直接退款");
         MiniTempDataDTO dataDTO = new MiniTempDataDTO();

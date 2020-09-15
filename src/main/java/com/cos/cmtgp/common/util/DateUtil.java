@@ -1,20 +1,10 @@
 package com.cos.cmtgp.common.util;
 
-import com.alibaba.fastjson.JSONObject;
-import com.cos.cmtgp.business.dto.DetailDTO;
-import com.cos.cmtgp.business.model.UserSetting;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class DateUtil {
 	
@@ -30,8 +20,6 @@ public class DateUtil {
 	 * <p>
 	 * Description:
 	 * </p>
-	 * 
-	 * @param cal
 	 * @return
 	 * @throws ParseException 
 	 */
@@ -68,7 +56,7 @@ public class DateUtil {
 	}
 
 	public static String getDayToString(Date date) throws ParseException {
-		SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		SimpleDateFormat df=new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
 		return df.format(date);
 	}
 	
@@ -145,8 +133,6 @@ public class DateUtil {
 	 * <p>
 	 * Description:
 	 * </p>
-	 *
-	 * @param sdate
 	 * @param n
 	 * @return
 	 */

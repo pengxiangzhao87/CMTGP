@@ -172,6 +172,7 @@ public class UserController extends BaseController {
 					renderFailed();
 				}
 			}else{
+				Db.update("update t_address_info set is_used=0 where u_id="+address.getUId());
 				if(address.save()){
 					renderSuccess();
 				}else{

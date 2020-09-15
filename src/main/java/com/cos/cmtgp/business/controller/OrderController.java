@@ -422,7 +422,11 @@ public class OrderController extends BaseController {
 			Map<String, Object> phraseMap = new HashMap<String, Object>();
 			phraseMap.put("value", "退款申请");
 			Map<String, Object> timeMap = new HashMap<String, Object>();
-			timeMap.put("value", new Date());
+			try {
+				timeMap.put("value", DateUtil.getDayToString(new Date()));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 
 			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
 			dataDTO.setTime2(timeMap);

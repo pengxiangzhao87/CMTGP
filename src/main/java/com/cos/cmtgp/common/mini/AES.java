@@ -27,6 +27,7 @@ public class AES {
         initialize();
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+//            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding","BC");
             Key sKeySpec = new SecretKeySpec(keyByte, "AES");
 
             cipher.init(Cipher.DECRYPT_MODE, sKeySpec, generateIV(ivByte));// 初始化
