@@ -186,6 +186,12 @@ public class UserController extends BaseController {
 		}
 	}
 
+	public void deleAddress(){
+		Integer aId = getParaToInt("aId");
+		Db.update("delete from t_address_info where a_id="+aId);
+		renderSuccess();
+	}
+
 	/**
 	 * APP
 	 * 查询余额

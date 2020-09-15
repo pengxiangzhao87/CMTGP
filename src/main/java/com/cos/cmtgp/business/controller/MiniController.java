@@ -714,7 +714,7 @@ public class MiniController extends BaseController {
                 map.put("isPhone",0);
                 if(recordList.size()>0){
                     Integer uId = recordList.get(0).getInt("u_id");
-                    if(Db.update("update t_user_setting set u_openid='"+openid+"',token='"+token+"' where u_id="+uId)>0){
+                    if(Db.update("update t_user_setting set u_openid='"+openid+"' where u_id="+uId)>0){
                         map.put("uId",uId);
                         renderSuccess("",map);
                     }else{
