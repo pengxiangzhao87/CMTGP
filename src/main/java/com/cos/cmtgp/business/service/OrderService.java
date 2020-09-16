@@ -46,7 +46,7 @@ public class OrderService {
 	}
 
 	public Map<String, Object> findPage(int pageSize, int pageNum, Map<String, String[]> paraMap, String orderBy) {
-		StringBuffer buf = new StringBuffer("from t_order_basic a,t_user_setting u where a.u_id = u.u_id ");
+		StringBuffer buf = new StringBuffer("from t_order_basic a,t_user_setting u where a.order_status not in (5,6) and a.u_id = u.u_id ");
 		for (String paraName : paraMap.keySet()) {
 			String prefix = "queryParams[";
 			if(paraName.startsWith(prefix)) {
@@ -69,7 +69,7 @@ public class OrderService {
 		}else {
 			buf.append(" ORDER BY "+orderBy);
 		}
-		Page<Record>  pages = Db.use("cmtgp_base").paginate(pageNum, pageSize,"select a.`o_id`, a.`u_id`, CONCAT(a.`order_time`,'') order_time, a.`total_price`, a.`consignee_name`, a.`consignee_phone`, a.`consignee_address`, a.`payment_status`, a.`payment_channel`, a.`extra_payment`, a.`extra_time`, a.`extra_status`, a.`extra_channel`,a. `order_status`,u.u_nick_name uName ",buf.toString());
+		Page<Record>  pages = Db.use("cmtgp_base").paginate(pageNum, pageSize,"select a.`o_id`,a.o_id as oId ,a.`u_id`, CONCAT(a.`order_time`,'') order_time, a.`total_price`, a.`consignee_name`, a.`consignee_phone`, a.`consignee_address`, a.`payment_status`, a.`payment_channel`, a.`extra_payment`, a.`extra_time`, a.`extra_status`, a.`extra_channel`,a. `order_status`,u.u_nick_name uName ",buf.toString());
 		Map<String, Object> datagrid = new HashMap<String, Object>();
 		datagrid.put("rows", pages.getList());
 		datagrid.put("total", pages.getTotalRow());

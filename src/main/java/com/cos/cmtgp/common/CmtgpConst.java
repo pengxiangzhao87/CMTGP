@@ -45,8 +45,6 @@ public class CmtgpConst {
 		supplierList.put("sjjksp01", "2");
 		supplierList.put("sjjksp02", "2");
 		supplierList.put("sjjksp03", "2");
-		supplierList.put("100", "1");
-		supplierList.put("200", "2");
 	}
 
 }

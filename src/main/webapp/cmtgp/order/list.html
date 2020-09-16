@@ -25,15 +25,6 @@
 	            </span>
 
 			</div>
-			<div style="text-align: left; margin: 6px;">
-			    <a href="#" class="easyui-linkbutton addBtn" iconCls="glyphicon-plus" plain="true" onclick="add()">增加</a>
-				<div id="searchBtnWrap" style="float: right; padding-right: 40px;">
-					<a href="javascript:void(0)" class="easyui-linkbutton color1"
-						iconCls="glyphicon-search" onclick="zcurdSearch(this)">搜索</a> <a
-						href="javascript:void(0)" class="easyui-linkbutton color2"
-						iconCls="glyphicon-repeat" onclick="flushPage()">重置</a>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>
@@ -56,7 +47,12 @@ var dgOptions = {
 		columns : [ [ {
 			field : 'o_id',
 			checkbox : true
-		}, {
+		},{
+            field : 'oId',
+            title : '订单编号',
+            width : 120,
+            sortable : true
+        }, {
 			field : 'uName',
 			title : '下单人',
 			width : 120,
@@ -69,7 +65,7 @@ var dgOptions = {
 		}, {
 			field : 'total_price',
 			title : '总价',
-			width : 120,
+			width : 60,
 			sortable : true
 		}, {
 			field : 'consignee_name',
@@ -91,21 +87,14 @@ var dgOptions = {
 			title : '支付状态',
 			width : 120,
 			sortable : true,formatter : function(val, row){
-             	if(val == 1){  return '已支付'} else {return '未支付'}                        
+             	if(val == 1){  return '已支付'} else {return '未支付'}
             }
-		}, {
-			field : 'payment_channel',
-			title : '支付渠道',
-			width : 120,
-			sortable : true,formatter : function(val, row){
-             	if(val == 1){  return '微信'} else if(val == 2) {return '支付宝'} else{return '我的账户'}                       
-            }
-		}, {
+		},{
 			field : 'order_status',
 			title : '订单处理状态',
 			width : 120,
 			sortable : true,formatter : function(val, row){
-             	if(val == 1){  return '代发货'} else if(val == 2) {return '配送中'} else if(val == 3) {return '已送达'} else{return '已完成'}                       
+             	if(val == 1){  return '待发货'} else if(val == 2) {return '配送中'} else if(val == 3) {return '已送达'} else{return '已关闭'}
             }
 		} ] ],
 		onDblClickRow:function(rowIndex, rowData){ 

@@ -6,7 +6,9 @@ import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.IAcsClient;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
+import com.cos.cmtgp.business.model.GlobalConf;
 
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,12 +19,11 @@ import java.util.TimerTask;
  * @Date 2020/5/26 0026
  */
 public class PhoneVerificationCode {
-    private static String ACCESSKEYID = "LTAI4GF9FfUZkBrrx9Qf4cVk";
-    private static String ACCESSSECRET = "jUw3iB924bCCebGrIIWGEs4pJLf2Hl";
 
     public static String sendAuthCode(String phone,String code) throws Exception{
         //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
-        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", PhoneVerificationCode.ACCESSKEYID, PhoneVerificationCode.ACCESSSECRET);
+        List<GlobalConf> confList = GlobalConf.dao.find("select * from t_global_conf where c_type=5");
+        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", confList.get(0).getCAppid(), confList.get(0).getApiSecuret());
         IAcsClient client = new DefaultAcsClient(profile);
         CommonRequest request = new CommonRequest();
         request.setSysMethod(MethodType.POST);

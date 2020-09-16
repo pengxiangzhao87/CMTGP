@@ -77,9 +77,6 @@ public class LoginController extends BaseController {
 		if(null!=supplierId) {
 			syslist.add(new SysMenu(3,"数据管理",null,0,"glyphicon-cog",0,"2016-01-06 19:37:31"));
 			syslist.add(new SysMenu(4,"商品维护","/commodity/listPage",3,"glyphicon-cloud",1,"2016-01-07 21:41:21"));
-			syslist.add(new SysMenu(5,"商品类型维护","/commodity/listTypePage",3,"glyphicon-cloud",1,"2016-01-07 21:41:21"));
-			syslist.add(new SysMenu(6,"用户查询","/user/listPage",3,"glyphicon-book",6,"2016-02-29 11:44:07"));		
-			syslist.add(new SysMenu(7,"订单查询","/order/listPage",3,"glyphicon-search",2,"2016-09-12 22:10:51"));
 		}else {
 			syslist.add(new SysMenu(3,"数据管理",null,0,"glyphicon-cog",0,"2016-01-06 19:37:31"));
 			syslist.add(new SysMenu(4,"商品维护","/commodity/listPage",3,"glyphicon-cloud",1,"2016-01-07 21:41:21"));

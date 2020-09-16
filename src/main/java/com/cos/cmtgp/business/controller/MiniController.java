@@ -123,9 +123,9 @@ public class MiniController extends BaseController {
         try {
             //等微信支付结果回调
             Thread.sleep(1000);
-            StringBuffer sb = new StringBuffer(" select a.order_time,a.payment_status,a.order_status,a.out_trade_no,a.extra_status,a.extra_out_trade_no,convert(a.total_price*100,SIGNED) as allPrice ");
+            StringBuffer sb = new StringBuffer(" select a.order_time,a.consignee_name,a.consignee_phone,a.payment_status,a.order_status,a.out_trade_no,a.extra_status,a.extra_out_trade_no,convert(a.total_price*100,SIGNED) as allPrice ");
             sb.append(" ,sum(b.payment_price) as total_price,convert(sum(b.payment_price)*100,SIGNED) as totalPrice ");
-            sb.append(" ,a.extra_payment,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time ,d.s_openid ");
+            sb.append(" ,a.extra_payment,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time ,d.s_openid,d.s_id ");
             sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
             sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id= "+oId);
             sb.append(" GROUP BY d.s_id ");
@@ -183,7 +183,7 @@ public class MiniController extends BaseController {
                 dataDTO.setCharacter_string1(idMap);
                 dataDTO.setDate4(markMap);
                 new SubscribeMessage(oId, dataDTO,MiniUtil.NEW_ORDER,2,item.getStr("s_openid")).start();
-            }else{
+            }else if(item.getInt("s_id")==1){
                 Map<String, Object> statusMap = new HashMap<String, Object>();
                 statusMap.put("value", "已支付");
                 Map<String, Object> timeMap = new HashMap<String, Object>();
@@ -193,8 +193,7 @@ public class MiniController extends BaseController {
                 dataDTO.setName1(nameMap);
                 dataDTO.setTime11(timeMap);
                 dataDTO.setCharacter_string2(idMap);
-                new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_SUCCESS_TEMP,3,item.getStr("s_openid")).start();
-                break;
+                new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_SUCCESS_TEMP,2,item.getStr("s_openid")).start();
             }
         }
     }
@@ -601,15 +600,22 @@ public class MiniController extends BaseController {
     }
 
     /**
-     * 是否关闭订单
+     * 是否关闭订单、送达订单
      * @param oId
      * @param id
      */
     private void updateOrderClose(Integer oId,Integer id){
         //查询没有退单完成的
-        List<OrderDetail> orderDetails = OrderDetail.dao.find("select * from t_order_detail where o_id = "+oId+" and (chargeback_status<>2 or chargeback_status is null) ");
-        if(orderDetails.size()==0) {
-            Db.update("update t_order_basic set order_status=4 where o_id = " + oId);
+        List<Record> recordList = Db.find("select count(1) as totalSum,sum(case is_send when 1 then 0 else 1 end) as arriveSum from t_order_detail where o_id = " + oId + " and (chargeback_status<>2 or chargeback_status is null) ");
+        if(recordList.size()>0) {
+            Record Record = recordList.get(0);
+            Integer totalSum = Record.getInt("totalSum");
+            BigDecimal arriveSum = Record.getBigDecimal("arriveSum");
+            if(totalSum==0 ){
+                Db.update("update t_order_basic set order_status=4 where o_id = " + oId);
+            }else if(totalSum.intValue()==arriveSum.intValue()){
+                Db.update("update t_order_basic set order_status=3 where o_id = " + oId);
+            }
         }
     }
 

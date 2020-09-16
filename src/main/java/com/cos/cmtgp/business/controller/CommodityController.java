@@ -1,6 +1,7 @@
 package com.cos.cmtgp.business.controller;
 
 
+import java.io.File;
 import java.util.*;
 
 import com.cos.cmtgp.business.model.CommodityInfo;
@@ -9,6 +10,7 @@ import com.cos.cmtgp.business.model.SupplierSetting;
 import com.cos.cmtgp.business.service.CommodityService;
 import com.cos.cmtgp.common.base.BaseController;
 import com.cos.cmtgp.common.vo.User;
+import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
@@ -256,7 +258,7 @@ public class CommodityController extends BaseController {
 		setAttr("model", CommodityInfo.dao.findById(getPara("id")));
 		render("Commodity_update.html");
 	}
-	
+
 	/**
 	 * 商品修改
 	 */
@@ -338,7 +340,10 @@ public class CommodityController extends BaseController {
 			if(null!=supplierId) {
 				buf.append(" where s_id = "+supplierId);
 			}
-			renderJson(Db.find(buf.toString()));
+			List<Record> recordList = Db.find(buf.toString());
+			Record record = recordList.get(0);
+			record.set("selected",true);
+			renderJson(recordList);
 		}else if(type.equals("isActive")) {
 			String supplierId = ((User) getSession().getAttribute("sysUser")).getSupplierId();
 			List<Record> list = new ArrayList<Record>();

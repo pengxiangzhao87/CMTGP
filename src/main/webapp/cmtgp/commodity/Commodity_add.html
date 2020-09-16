@@ -5,18 +5,18 @@
             <tr>
            		<th><span>商品供应商：</span></th>
                	<td>
-               		<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="pid" name="model.p_id" value="" data-options="fit:true,required:true"></input></div>
+               		<div class="wrap_input"><input class="easyui-combobox" editable="false" panelHeight="auto" type="text" id="pid" name="model.p_id" value="" data-options="fit:true,required:true"></input></div>
            		</td>
             <tr>
            		<th><span>商品分类：</span></th>
                	<td>
-               		<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="tid" name="model.t_id" value="" data-options="fit:true,required:true"></input></div>
+               		<div class="wrap_input"><input class="easyui-combobox" editable="false" panelHeight="auto" type="text" id="tid" name="model.t_id" value="" data-options="fit:true,required:true"></input></div>
            		</td>
             </tr>
 			<tr>
 				<th><span>参加活动：</span></th>
 				<td>
-					<div class="wrap_input"><input class="easyui-combobox" panelHeight="auto" type="text" id="aid" name="model.is_active" value="" data-options="fit:true,required:true"></input></div>
+					<div class="wrap_input"><input class="easyui-combobox" editable="false" panelHeight="auto" type="text" id="aid" name="model.is_active" value="" data-options="fit:true,required:true"></input></div>
 				</td>
 			</tr>
             <tr>
@@ -29,7 +29,7 @@
 			<tr id="orginalPrice">
 				<th><span>原价：</span></th>
 				<td>
-					<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.original_price" value="0" data-options="fit:true"></input></div>
+					<div class="wrap_input"><input class="easyui-textbox" type="number" name="model.original_price" value="0"  data-options="fit:true"></input></div>
 				</td>
 			</tr>
             <tr>
@@ -42,7 +42,7 @@
             <tr>
            		<th><span>商品单位：</span></th>
                	<td>
-               		<div class="wrap_input"><input class="easyui-textbox" type="text" name="model.s_unit" value="" data-options="fit:true,required:true"></input></div>
+               		<div class="wrap_input"><input class="easyui-textbox"  type="text" name="model.s_unit" value="" data-options="fit:true,required:true"></input></div>
            		</td>
            		
             </tr>
@@ -62,7 +62,7 @@
            		<th><span>售卖类型：</span></th>
                	<td>
 					<div class="wrap_input">
-		               		<select id="cc" class="easyui-combobox" name="model.init_unit" panelHeight="auto" data-options="fit:true,required:true">
+		               		<select  class="easyui-combobox" editable="false" name="model.init_unit" panelHeight="auto" data-options="fit:true,required:true">
 							    <option value="0">重量</option>
 							    <option value="1">个数</option>
 							</select>
@@ -80,6 +80,14 @@
 				</td>
 
 			</tr>
+			<!--<tr>-->
+				<!--<th><span> </span></th>-->
+				<!--<td>-->
+					<!--<img src="${basePath}/upload/111.jpg" />-->
+				<!--</td>-->
+
+			<!--</tr>-->
+
 			<tr>
 				<th><span>商品视频：</span></th>
 				<td>
@@ -110,7 +118,7 @@
            		<th><span>是否可下单：</span></th>
                	<td>
                		<div class="wrap_input">
-	               		<select id="cc" class="easyui-combobox" name="model.state" panelHeight="auto" data-options="fit:true,required:true">
+	               		<select id="cc" class="easyui-combobox" editable="false" name="model.state" panelHeight="auto" data-options="fit:true,required:true">
 						    <option value="1">是</option>
 						    <option value="0">否</option>
 						</select>
@@ -156,7 +164,9 @@ function save(successFunc) {
 			type:'POST',
 			data:getParam(),
 			onSubmit : function() { //表单提交前的回调函数
-			    if($('#aid').val()==3 && $(":input[name='is_active']").val()==''){
+                var originalPrice = $(":input[name='model.original_price']").val();
+                var active = $(":input[name='model.is_active']").val();
+			    if(active==3 && (originalPrice=='' || originalPrice==0)){
                     showWarnMsg("原价不能为空！");
 			        return false;
 				}
@@ -191,7 +201,7 @@ function getParam() {
 		if(!param[key]) {
 			delete param[key];
 		}
-	}debugger;
+	}
 	return param;
 }
 

@@ -71,7 +71,7 @@ public class OrderController extends BaseController {
 				" inner join t_order_basic d on a.o_id=d.o_id " +
 				" left join t_commodity_info b on a.s_id=b.s_id " +
 				" left join t_supplier_setting c on b.p_id=c.s_id and c.s_id="+sId +
-				" where a.is_send=1 and a.o_id="+oId;
+				" where a.is_send=1 and a.chargeback_status is null and a.o_id="+oId;
 		List<Record> records = Db.find(sql);
 		Record record = records.get(0);
 		String refundStatus = record.getStr("refundStatus");
@@ -102,7 +102,7 @@ public class OrderController extends BaseController {
 
 		String sql = "select b.id,d.s_id,b.is_send,b.chargeback_status " +
 				"from t_order_detail b,t_commodity_info c ,t_supplier_setting d " +
-				"where b.s_id=c.s_id and c.p_id=d.s_id and b.o_id="+oId;
+				"where b.s_id=c.s_id and c.p_id=d.s_id and b.chargeback_status is null and b.o_id="+oId;
 		List<Record> recordList = Db.find(sql);
 		if(recordList.size()>0){
 			boolean flag = false;
@@ -418,7 +418,7 @@ public class OrderController extends BaseController {
 			Map<String, Object> idMap = new HashMap<String, Object>();
 			idMap.put("value", orderDetail.getOId());
 			Map<String, Object> amountMap = new HashMap<String, Object>();
-			amountMap.put("value", orderDetail.getPaymentPrice());
+			amountMap.put("value", orderDetail.getPaymentPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
 			Map<String, Object> phraseMap = new HashMap<String, Object>();
 			phraseMap.put("value", "退款申请");
 			Map<String, Object> timeMap = new HashMap<String, Object>();
@@ -427,7 +427,6 @@ public class OrderController extends BaseController {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-
 			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
 			dataDTO.setTime2(timeMap);
 			dataDTO.setAmount3(amountMap);
@@ -460,9 +459,9 @@ public class OrderController extends BaseController {
 			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
 			sb.append(" and a.order_status not in (4,6) ");
 			if(status==1){
-				sb.append(" and (b.is_send="+status+" or b.chargeback_status=1) ");
+				sb.append(" and ((b.is_send=1 and b.chargeback_status is null) or b.chargeback_status in (1,4,5))  ");
 			}else{
-				sb.append(" and b.is_send="+status);
+				sb.append(" and b.is_send=2 ");
 			}
 			sb.append(" and d.s_id="+sId);
 			sb.append(" group by a.o_id order by a.order_time ASC ");

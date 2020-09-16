@@ -73,7 +73,7 @@ public class CommunityService {
      * @return
      */
     public List<Record> queryFirstReply(Integer hId,Integer uId){
-        String sql = " select d.*,count(e.id) as isLiked from ( " +
+        String sql = " select d.*,count(e.id) as Record from ( " +
                 " select a.d_id,a.h_id,a.u_id,b.u_avatar_url,b.u_nick_name,a.d_datetime,a.d_evaluate_context,count(c.id) as likedNum " +
                 ",case when f.u_id=a.u_id then 1 else 0 end as isAuthor " +
                 ",case when a.u_id=" + uId + " then 1 else 0 end as canDelete " +
