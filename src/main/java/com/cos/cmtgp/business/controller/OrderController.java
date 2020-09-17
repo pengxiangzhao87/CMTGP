@@ -432,9 +432,13 @@ public class OrderController extends BaseController {
 			dataDTO.setAmount3(amountMap);
 			dataDTO.setPhrase4(phraseMap);
 			dataDTO.setCharacter_string1(idMap);
-			List<Record> recordList = Db.find("select a.s_openid from t_supplier_setting a,t_commodity_info b,t_order_detail c where c.s_id=b.s_id and b.p_id=a.s_id and c.s_id=" + orderDetail.getSId());
+			List<Record> recordList = Db.find("select a.s_phone from t_supplier_setting a,t_commodity_info b,t_order_detail c where c.s_id=b.s_id and b.p_id=a.s_id and c.s_id=" + orderDetail.getSId());
 			if(recordList.size()>0){
-				new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
+				//new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
+				//发送短信
+				try {
+					PhoneVerificationCode.sendMini(recordList.get(0).getStr("s_phone"), orderDetail.getOId().toString(), 2);
+				}catch (Exception e){}
 			}
 			renderSuccess();
 		}

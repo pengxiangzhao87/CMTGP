@@ -12,10 +12,7 @@ import com.cos.cmtgp.business.model.OrderDetail;
 import com.cos.cmtgp.common.mini.SubscribeMessage;
 import com.cos.cmtgp.common.mini.WXPayConstants;
 import com.cos.cmtgp.common.mini.WXPayUtil;
-import com.cos.cmtgp.common.util.DateUtil;
-import com.cos.cmtgp.common.util.FreemarkUtil;
-import com.cos.cmtgp.common.util.MiniUtil;
-import com.cos.cmtgp.common.util.StringUtil;
+import com.cos.cmtgp.common.util.*;
 import com.jfinal.aop.Before;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -168,29 +165,29 @@ public class OrderService {
 	public boolean  sendOrder(Integer oId,Record record){
 		if(Db.update("update t_order_detail set is_send=2 where id in ("+record.getStr("ids")+")")>0){
 			//发送订阅
-			Map<String, Object> one = new HashMap<String, Object>();
-			one.put("value", oId);
-
-			Map<String, Object> two = new HashMap<String, Object>();
-			two.put("value", "￥" + record.get("total_price"));
-
-			Map<String, Object> three = new HashMap<String, Object>();
-			three.put("value", record.get("consignee_name"));
-
-			Map<String, Object> four = new HashMap<String, Object>();
-			four.put("value", record.get("consignee_phone"));
-
-			Map<String, Object> five = new HashMap<String, Object>();
-			five.put("value", "商品配送中，注意查收");
-
-			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
-			dataDTO.setCharacter_string6(one);
-			dataDTO.setAmount12(two);
-			dataDTO.setName2(three);
-			dataDTO.setPhone_number3(four);
-			dataDTO.setThing5(five);
-			List<Record> recordList = Db.find("select b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
-			new SubscribeMessage(oId, dataDTO,MiniUtil.SEND_TEMP,3,recordList.get(0).getStr("u_openid")).start();
+//			Map<String, Object> one = new HashMap<String, Object>();
+//			one.put("value", oId);
+//
+//			Map<String, Object> two = new HashMap<String, Object>();
+//			two.put("value", "￥" + record.get("total_price"));
+//
+//			Map<String, Object> three = new HashMap<String, Object>();
+//			three.put("value", record.get("consignee_name"));
+//
+//			Map<String, Object> four = new HashMap<String, Object>();
+//			four.put("value", record.get("consignee_phone"));
+//
+//			Map<String, Object> five = new HashMap<String, Object>();
+//			five.put("value", "商品配送中，注意查收");
+//
+//			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
+//			dataDTO.setCharacter_string6(one);
+//			dataDTO.setAmount12(two);
+//			dataDTO.setName2(three);
+//			dataDTO.setPhone_number3(four);
+//			dataDTO.setThing5(five);
+//			List<Record> recordList = Db.find("select b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
+//			new SubscribeMessage(oId, dataDTO,MiniUtil.SEND_TEMP,3,recordList.get(0).getStr("u_openid")).start();
 			if(record.getInt("sum").intValue()==record.getInt("finish").intValue()){
 				if(Db.update("update t_order_basic set order_status=2 where o_id="+oId)>0){
 					return true;
@@ -501,26 +498,31 @@ public class OrderService {
 		if (Db.update("update t_order_basic set extra_status=2,extra_payment=" + payPrice + " where o_id=" + oId) > 0) {
 			if (Db.update("update t_order_detail set extra_pay_status=2 where is_extra=2 and o_id=" + oId) > 0) {
 				//发送订阅
-				Map<String, Object> one = new HashMap<String, Object>();
-				one.put("value", "重量超出，需支付差价￥"+payPrice);
+//				Map<String, Object> one = new HashMap<String, Object>();
+//				one.put("value", "重量超出，需支付差价￥"+payPrice);
+//
+//				Map<String, Object> two = new HashMap<String, Object>();
+//				BigDecimal bigDecimal = new BigDecimal(payPrice).setScale(2, RoundingMode.HALF_UP);
+//				two.put("value", "￥" + bigDecimal);
+//
+//				Map<String, Object> three = new HashMap<String, Object>();
+//				three.put("value", oId);
+//
+//				Map<String, Object> four = new HashMap<String, Object>();
+//				four.put("value", orderTime);
+//
+//				MiniTempDataDTO dataDTO = new MiniTempDataDTO();
+//				dataDTO.setThing4(one);
+//				dataDTO.setAmount3(two);
+//				dataDTO.setNumber2(three);
+//				dataDTO.setTime1(four);
 
-				Map<String, Object> two = new HashMap<String, Object>();
-				BigDecimal bigDecimal = new BigDecimal(payPrice).setScale(2, RoundingMode.HALF_UP);
-				two.put("value", "￥" + bigDecimal);
-
-				Map<String, Object> three = new HashMap<String, Object>();
-				three.put("value", oId);
-
-				Map<String, Object> four = new HashMap<String, Object>();
-				four.put("value", orderTime);
-
-				MiniTempDataDTO dataDTO = new MiniTempDataDTO();
-				dataDTO.setThing4(one);
-				dataDTO.setAmount3(two);
-				dataDTO.setNumber2(three);
-				dataDTO.setTime1(four);
-				List<Record> recordList = Db.find("select b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
-				new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_TEMP,3,recordList.get(0).getStr("u_openid")).start();
+//				new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_TEMP,3,recordList.get(0).getStr("u_openid")).start();
+				try{
+					//发送短信
+					List<Record> recordList = Db.find("select b.u_phone from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
+					PhoneVerificationCode.sendMini(recordList.get(0).getStr("u_phone"),oId.toString(),3);
+				}catch (Exception ex){}
 				return true;
 			}
 		}

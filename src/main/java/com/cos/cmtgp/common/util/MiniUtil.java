@@ -23,19 +23,19 @@ public class MiniUtil {
     //查询退款
     public static final String CHECK_REFUND_ORDER = "https://api.mch.weixin.qq.com/pay/refundquery";
 
-    //二次支付通知模板
+    //二次支付通知模板,走短信
     public static final String EXTRA_PAY_TEMP = "c-wwagnYAUYK0dj5QeEjvT64J_P39vNTnXiHs3EXVgA";
     //退款成功通知模板
     public static final String REFUND_SUCCESS_TEMP = "jq5UENIsQBT7dg8AwBj2MVd7GJpcEl8oQm7ztx_FPDA";
-    //发货通知模板
+    //发货通知模板，不要
     public static final String SEND_TEMP = "xq__fUa5dSTSkOautbRcm9R9Y9ynSOeD4Ooh8roxctc";
 
 
-    //二次支付成功通知模板
+    //二次支付成功通知模板，不要
     public static final String EXTRA_PAY_SUCCESS_TEMP = "fSY6OIzxAN8Ru7aFUNvwBUD80i561FaqwzkwIG_sNJQ";
-    //申请退款模板
+    //申请退款模板，走短信
     public static final String REFUND_TEMP = "94fg3W3PWhDWzpZ_W5upX3megk0dxBL47w9w0SsmAKo";
-    //新订单模板
+    //新订单模板，走短信
     public static final String NEW_ORDER = "6Pcxa3JKbmABTMowyVr_8hACo9u3xiAm3p80Y6DIycQ";
 
 

@@ -125,7 +125,7 @@ public class MiniController extends BaseController {
             Thread.sleep(1000);
             StringBuffer sb = new StringBuffer(" select a.order_time,a.consignee_name,a.consignee_phone,a.payment_status,a.order_status,a.out_trade_no,a.extra_status,a.extra_out_trade_no,convert(a.total_price*100,SIGNED) as allPrice ");
             sb.append(" ,sum(b.payment_price) as total_price,convert(sum(b.payment_price)*100,SIGNED) as totalPrice ");
-            sb.append(" ,a.extra_payment,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time ,d.s_openid,d.s_id ");
+            sb.append(" ,a.extra_payment,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time ,d.s_openid,d.s_id,d.s_phone ");
             sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
             sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id= "+oId);
             sb.append(" GROUP BY d.s_id ");
@@ -135,14 +135,19 @@ public class MiniController extends BaseController {
                 Integer paymentStatus = record.getInt("payment_status");
                 Integer orderStatus = record.getInt("order_status");
                 Integer extraStatus = record.getInt("extra_status");
+
+                //发送短信
+                PhoneVerificationCode.sendMini(record.getStr("s_phone"),oId.toString(),1);
                 if(type==1 && paymentStatus==1 && orderStatus==1 || type==2 && extraStatus==1){
                     resultStr = "支付成功";
                 }else{
                     //主动查询
                     resultStr = this.checkOrderStatus(record, type, oId, openid);
                     if("支付成功".equals(resultStr)){
+                        //发送短信
+                        PhoneVerificationCode.sendMini(record.getStr("s_phone"),oId.toString(),1);
                         //发送订阅
-                        this.afterPaySendMessage(records,oId,type);
+                        //this.afterPaySendMessage(records,oId,type);
                     }
                 }
             }else{
@@ -155,6 +160,7 @@ public class MiniController extends BaseController {
         renderSuccess(resultStr);
 
     }
+
 
     /**
      * 支付成功发送订阅消息
@@ -284,7 +290,7 @@ public class MiniController extends BaseController {
                     String outTradeNo = respData.get("out_trade_no");
                     List<Record> recordList = Db.find(" select a.consignee_name,a.consignee_phone,a.o_id,a.payment_status,a.order_status,a.total_price as paymentPrice,a.extra_status,a.extra_payment,a.out_trade_no,a.extra_out_trade_no,d.s_openid " +
                             " ,a.order_time,sum(b.payment_price) as total_price,convert(sum(b.payment_price)*100,SIGNED) as totalPrice " +
-                            " ,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time " +
+                            " ,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time,d.s_phone " +
                             " from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d " +
                             " where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.out_trade_no='" + outTradeNo + "' or a.extra_out_trade_no='"+ outTradeNo +"' GROUP BY d.s_id");
                     if(recordList.size()>0){
@@ -297,7 +303,9 @@ public class MiniController extends BaseController {
                                 if((paymentStatus==2 || paymentStatus==3) && orderStatus==5){
                                     Db.update("update t_order_basic set payment_status=1,order_status=1,transaction_id='"+transactionId+"' where out_trade_no='" + outTradeNo + "'");
                                     //发送订阅
-                                    this.afterPaySendMessage(recordList,record.getInt("o_id"),1);
+                                    //this.afterPaySendMessage(recordList,record.getInt("o_id"),1);
+                                    //发送短信
+                                    PhoneVerificationCode.sendMini(record.getStr("s_phone"),record.getStr("o_id"),1);
                                 }
                                 miniService.addWXLog(null,null,null,"微信支付回调",notityXml,now);
                             }else{
@@ -312,7 +320,7 @@ public class MiniController extends BaseController {
                                     Db.update("update t_order_basic set extra_status=1,extra_time=now(),extra_transaction_id='"+transactionId+"' where extra_out_trade_no='" + outTradeNo + "'");
                                     Db.update("update t_order_detail set extra_pay_status=1 where is_extra=2 and o_id="+record.getInt("o_id"));
                                     //发送订阅
-                                    this.afterPaySendMessage(recordList,record.getInt("o_id"),2);
+                                    //this.afterPaySendMessage(recordList,record.getInt("o_id"),2);
                                 }
                                 miniService.addWXLog(null,null,null,"微信二次支付回调",notityXml,now);
                             }else{
@@ -393,9 +401,9 @@ public class MiniController extends BaseController {
                                 if(record.getInt("chargeback_status")==2){
                                     this.updateOrderClose(oId,id);
                                 }
-                                if(extraStatus==2){
-                                    this.afterRefundSendMessage(record,2);
-                                }
+//                                if(extraStatus==2){
+//                                    this.afterRefundSendMessage(record,2);
+//                                }
                             }
                         }
                     }
@@ -417,7 +425,7 @@ public class MiniController extends BaseController {
                             Db.update("update t_order_basic set back_price_status="+chargebackStatus+" where o_id="+oId);
                             Db.update("update t_order_detail set extra_back_status="+chargebackStatus+" where id="+id);
                             resultStr = "退款成功";
-                            this.afterRefundSendMessage(record,type);
+//                            this.afterRefundSendMessage(record,type);
                         }
                     }
                 }
@@ -537,7 +545,7 @@ public class MiniController extends BaseController {
                                     if(backPriceStatus!=2 && backPriceStatus!=4 && backPriceStatus!=5){
                                         Db.update("update t_order_basic set back_price_status=" + refundStatus + " where o_id="+oId);
                                         Db.update("update t_order_detail set extra_back_status=" + refundStatus + " where is_extra=1 and o_id="+oId);
-                                        this.afterRefundSendMessage(record,2);
+//                                        this.afterRefundSendMessage(record,2);
                                     }
                                     miniService.addWXLog(oId,null,refundFee,"微信差价退款回调",decode,now);
                                 }else{
@@ -586,7 +594,7 @@ public class MiniController extends BaseController {
                                         if(chargebackStatus==2){
                                             //所有商品都退款，关闭订单
                                             this.updateOrderClose(oId,record.getInt("id"));
-                                            this.afterRefundSendMessage(record,1);
+//                                            this.afterRefundSendMessage(record,1);
                                         }
                                     }
                                     miniService.addWXLog(oId,record.getInt("id"),refundFee,"微信二次支付退款回调",decode,now);
