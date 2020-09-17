@@ -272,7 +272,7 @@ public class MiniController extends BaseController {
                     int totalFee = Integer.valueOf(respData.get("total_fee")).intValue();
                     String transactionId = respData.get("transaction_id");
                     String outTradeNo = respData.get("out_trade_no");
-                    List<Record> recordList = Db.find(" select a.o_id,a.payment_status,a.order_status,a.total_price as paymentPrice,a.extra_status,a.extra_payment,a.out_trade_no,a.extra_out_trade_no,d.s_openid " +
+                    List<Record> recordList = Db.find(" select a.consignee_name,a.consignee_phone,a.o_id,a.payment_status,a.order_status,a.total_price as paymentPrice,a.extra_status,a.extra_payment,a.out_trade_no,a.extra_out_trade_no,d.s_openid " +
                             " ,a.order_time,sum(b.payment_price) as total_price,convert(sum(b.payment_price)*100,SIGNED) as totalPrice " +
                             " ,convert(a.extra_payment*100,SIGNED) as extraPayment,a.extra_time " +
                             " from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d " +
@@ -343,7 +343,7 @@ public class MiniController extends BaseController {
             Thread.sleep(1000);
             Date now = new Date();
             if(type==1){
-                List<Record> recordList = Db.find(" select b.o_id,b.payment_price,b.chargeback_status,b.refund_id,b.is_extra,b.extra_pay_back_status,b.extra_refund_id,c.u_openid,b.extra_price,b.extra_back_status" +
+                List<Record> recordList = Db.find(" select b.o_id,b.payment_price,b.chargeback_status,b.refund_id,b.is_extra,b.extra_pay_back_status,b.extra_refund_id,c.u_openid,b.extra_price,b.extra_back_status,a.total_back_price " +
                         " from t_order_basic a,t_order_detail b,t_user_setting c where a.o_id=b.o_id and a.u_id=c.u_id and b.id=" + id);
                 Record record = recordList.get(0);
                 if(record.getInt("chargeback_status")==2){
@@ -381,12 +381,13 @@ public class MiniController extends BaseController {
                                 if(record.getInt("chargeback_status")==2){
                                     this.updateOrderClose(oId,id);
                                 }
+                                this.afterRefundSendMessage(record,2);
                             }
                         }
                     }
                 }
             }else{
-                List<Record> recordList = Db.find("select a.back_price_status,a.back_refund_id,a.total_back_price ,b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id=" + oId);
+                List<Record> recordList = Db.find("select a.o_id,a.back_price_status,a.back_refund_id,a.total_back_price ,b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id=" + oId);
                 Record record = recordList.get(0);
                 if(record.getInt("back_price_status")==2){
                     resultStr = "退款成功";
@@ -449,7 +450,7 @@ public class MiniController extends BaseController {
         dataDTO.setAmount3(amountMap);
         dataDTO.setDate2(dateMap);
         dataDTO.setPhrase4(phraseMap);
-        dataDTO.setThing4(thingMap);
+        dataDTO.setThing5(thingMap);
         new SubscribeMessage(record.getInt("o_id"), dataDTO,MiniUtil.REFUND_SUCCESS_TEMP,3,record.getStr("u_openid")).start();
     }
 
@@ -496,6 +497,7 @@ public class MiniController extends BaseController {
                     sb.append(" ,a.back_refund_id,a.back_price_status,a.back_out_refund_no ");
                     sb.append(" ,b.refund_id,b.chargeback_status,b.out_refund_no ");
                     sb.append(" ,b.extra_refund_id,b.extra_pay_back_status,b.extra_out_refund_no ");
+                    sb.append(" ,a.extra_transaction_id,a.extra_out_trade_no ");
                     sb.append(" from t_order_basic a,t_order_detail b,t_user_setting c ");
                     sb.append(" where  a.o_id=b.o_id and a.u_id=c.u_id and ( ");
                     sb.append(" (a.back_refund_id = '"+refundId+"' and a.back_out_refund_no='"+outRefundNo+"') ");
@@ -511,8 +513,8 @@ public class MiniController extends BaseController {
                         String refundNo = record.getStr("out_refund_no");
                         String extraRefundId = record.getStr("extra_refund_id");
                         String extraOutRefundNo = record.getStr("extra_out_refund_no");
-                        int totalPrice = record.getBigDecimal("total_price").multiply(new BigDecimal("100")).stripTrailingZeros().intValue();
-                        if(record.getStr("transaction_id").equals(transactionId) && record.getStr("out_trade_no").equals(outTradeNo)){
+                        if(record.getStr("transaction_id").equals(transactionId) && record.getStr("out_trade_no").equals(outTradeNo)
+                            || record.getStr("extra_transaction_id").equals(transactionId) && record.getStr("extra_out_trade_no").equals(outTradeNo)){
                             /*************分量不足，退款差价**************/
                             if(backRefundId!=null && backOutRefundNo!=null && backRefundId.equals(refundId) && backOutRefundNo.equals(outRefundNo)){
                                 int backPriceStatus = record.getInt("back_price_status");

@@ -349,8 +349,8 @@ public class OrderService {
 			String basicSql = "select a.consignee_name,a.consignee_phone,a.consignee_address,a.o_id,a.payment_channel,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,DATE_FORMAT(a.extra_time,'%Y-%m-%d %T') as extra_time,a.extra_payment,a.extra_channel" +
                 ",a.order_status,case when b.account_price is null then 0 else b.account_price end as accountPrice,sum(case when c.chargeback_status is null then (case c.is_extra when 2 then c.extra_price else 0 end) else 0 end ) as extraPrice,a.total_price,a.consignee_range_time,a.out_trade_no,a.extra_status  " +
 					" ,a.total_back_price,a.back_price_status,sum(case when c.chargeback_status =2 then c.payment_price else 0 end) as backPrice " +
-					" ,sum(case when c.chargeback_status =2 then (case c.is_extra when 1 then c.extra_price else 0 end) else 0 end) chargeback_pay " +
-					" ,sum(case when c.chargeback_status =2 then (case c.is_extra when 2 then c.extra_price else 0 end) else 0 end) chargeback_back " +
+					" ,sum(case when c.chargeback_status =2 then (case c.is_extra when 1 then c.extra_price else 0 end) else 0 end) chargeback_back " +
+					" ,sum(case when c.chargeback_status =2 then (case c.is_extra when 2 then c.extra_price else 0 end) else 0 end) chargeback_pay " +
                 " from t_order_basic a,t_user_setting b,t_order_detail c where a.o_id=c.o_id and a.u_id=b.u_id and a.o_id="+oId;
 		List<Record> info = Db.find(basicSql);
 		if(info.size()>0){
