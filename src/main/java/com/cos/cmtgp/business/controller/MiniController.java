@@ -176,7 +176,12 @@ public class MiniController extends BaseController {
                 Map<String, Object> phoneMap = new HashMap<String, Object>();
                 phoneMap.put("value", item.get("consignee_phone"));
                 Map<String, Object> markMap = new HashMap<String, Object>();
-                markMap.put("value", item.getStr("order_time"));
+                try {
+                    String orderTime = DateUtil.getDayToString(DateUtil.getStringToDate(item.getStr("order_time")));
+                    markMap.put("value", orderTime);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 dataDTO.setName5(nameMap);
                 dataDTO.setPhone_number7(phoneMap);
                 dataDTO.setAmount3(priceMap);
@@ -187,7 +192,12 @@ public class MiniController extends BaseController {
                 Map<String, Object> statusMap = new HashMap<String, Object>();
                 statusMap.put("value", "已支付");
                 Map<String, Object> timeMap = new HashMap<String, Object>();
-                timeMap.put("value", item.getStr("extra_time"));
+                try {
+                    String extraTime = DateUtil.getDayToString(DateUtil.getStringToDate(item.getStr("extra_time")));
+                    timeMap.put("value", extraTime);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 dataDTO.setAmount3(priceMap);
                 dataDTO.setPhrase5(statusMap);
                 dataDTO.setName1(nameMap);
@@ -362,7 +372,9 @@ public class MiniController extends BaseController {
                             if(record.getInt("is_extra")!=2 || record.getInt("is_extra")==2 && record.getInt("extra_pay_back_status")!=null && record.getInt("extra_pay_back_status")==2){
                                 this.updateOrderClose(oId,id);
                             }
-                            this.afterRefundSendMessage(record,type);
+                            if(chargebackStatus==2){
+                                this.afterRefundSendMessage(record,type);
+                            }
 						}
 					}
                 }
@@ -381,7 +393,9 @@ public class MiniController extends BaseController {
                                 if(record.getInt("chargeback_status")==2){
                                     this.updateOrderClose(oId,id);
                                 }
-                                this.afterRefundSendMessage(record,2);
+                                if(extraStatus==2){
+                                    this.afterRefundSendMessage(record,2);
+                                }
                             }
                         }
                     }
