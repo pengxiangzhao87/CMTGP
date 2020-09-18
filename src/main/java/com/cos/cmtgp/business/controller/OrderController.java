@@ -436,9 +436,7 @@ public class OrderController extends BaseController {
 			if(recordList.size()>0){
 				//new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
 				//发送短信
-				try {
-					PhoneVerificationCode.sendMini(recordList.get(0).getStr("s_phone"), orderDetail.getOId().toString(), 2);
-				}catch (Exception e){}
+				PhoneVerificationCode.sendMini(recordList.get(0).getStr("s_phone"), orderDetail.getOId().toString(), 2);
 			}
 			renderSuccess();
 		}

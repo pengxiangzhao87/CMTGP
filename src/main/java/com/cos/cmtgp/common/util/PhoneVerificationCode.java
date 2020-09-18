@@ -7,8 +7,12 @@ import com.aliyuncs.IAcsClient;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.cos.cmtgp.business.model.GlobalConf;
+import com.jfinal.json.FastJson;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,7 +23,7 @@ import java.util.TimerTask;
  * @Date 2020/5/26 0026
  */
 public class PhoneVerificationCode {
-
+    static Logger logger = LogManager.getLogger(PhoneVerificationCode.class);
     public static String sendAuthCode(String phone,String code) throws Exception{
         //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
         List<GlobalConf> confList = GlobalConf.dao.find("select * from t_global_conf where c_type=5");
@@ -46,37 +50,42 @@ public class PhoneVerificationCode {
 
     }
 
-    public static String sendMini(String phone,String product,Integer type) throws Exception{
+    public static void sendMini(String phone,String product,Integer type) {
         //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
-        List<GlobalConf> confList = GlobalConf.dao.find("select * from t_global_conf where c_type=5");
-        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", confList.get(0).getCAppid(), confList.get(0).getApiSecuret());
-        IAcsClient client = new DefaultAcsClient(profile);
-        CommonRequest request = new CommonRequest();
-        request.setSysMethod(MethodType.POST);
-        //域名，请勿修改
-        request.setSysDomain("dysmsapi.aliyuncs.com");
-        //API版本号，请勿修改
-        request.setSysVersion("2017-05-25");
-        //API名称
-        request.setSysAction("SendSms");
-        //接收号码，格式为：国际码+号码，必填
-        request.putQueryParameter("PhoneNumbers", "86"+phone);
-        request.putQueryParameter("SignName", "食朝夕");
-        //1：新订单，2：退款：3：二次支付
-        if(type==1){
-            request.putQueryParameter("TemplateCode", "SMS_202821703");
-        }else if(type==2){
-            request.putQueryParameter("TemplateCode", "SMS_202821707");
-        }else{
-            request.putQueryParameter("TemplateCode", "SMS_202816644");
-        }
-        request.putQueryParameter("TemplateParam", "{\"product\":\""+product+"\"}");
-//        request.putQueryParameter("SmsUpExtendCode", "12345");
-        CommonResponse response = client.getCommonResponse(request);
-        //{"Message":"OK","RequestId":"F9553693-7FFF-4C48-8658-3A42A76D228D","BizId":"366107990573586823^0","Code":"OK"}
-        //{"Message":"签名不合法(不存在或被拉黑)","RequestId":"04C64507-910E-4971-89AF-671CA726C045","Code":"isv.SMS_SIGNATURE_ILLEGAL"}
-        return response.getData();
-
+        try{
+            List<GlobalConf> confList = GlobalConf.dao.find("select * from t_global_conf where c_type=5");
+            DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", confList.get(0).getCAppid(), confList.get(0).getApiSecuret());
+            IAcsClient client = new DefaultAcsClient(profile);
+            CommonRequest request = new CommonRequest();
+            request.setSysMethod(MethodType.POST);
+            //域名，请勿修改
+            request.setSysDomain("dysmsapi.aliyuncs.com");
+            //API版本号，请勿修改
+            request.setSysVersion("2017-05-25");
+            //API名称
+            request.setSysAction("SendSms");
+            //接收号码，格式为：国际码+号码，必填
+            request.putQueryParameter("PhoneNumbers", "86"+phone);
+            request.putQueryParameter("SignName", "食朝夕");
+            //1：新订单，2：退款：3：二次支付
+            if(type==1){
+                request.putQueryParameter("TemplateCode", "SMS_202821703");
+            }else if(type==2){
+                request.putQueryParameter("TemplateCode", "SMS_202821707");
+            }else{
+                request.putQueryParameter("TemplateCode", "SMS_202816644");
+            }
+            request.putQueryParameter("TemplateParam", "{\"product\":\""+product+"\"}");
+    //        request.putQueryParameter("SmsUpExtendCode", "12345");
+            CommonResponse response = client.getCommonResponse(request);
+            //{"Message":"OK","RequestId":"F9553693-7FFF-4C48-8658-3A42A76D228D","BizId":"366107990573586823^0","Code":"OK"}
+            //{"Message":"签名不合法(不存在或被拉黑)","RequestId":"04C64507-910E-4971-89AF-671CA726C045","Code":"isv.SMS_SIGNATURE_ILLEGAL"}
+            String data = response.getData();
+            Map<String,String> parse = FastJson.getJson().parse(data, Map.class);
+            if(!"OK".equals(parse.get("Code"))){
+                logger.error(data);
+            }
+        }catch(Exception ex){}
     }
 
 

@@ -518,11 +518,10 @@ public class OrderService {
 //				dataDTO.setTime1(four);
 
 //				new SubscribeMessage(oId, dataDTO,MiniUtil.EXTRA_PAY_TEMP,3,recordList.get(0).getStr("u_openid")).start();
-				try{
-					//发送短信
-					List<Record> recordList = Db.find("select b.u_phone from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
-					PhoneVerificationCode.sendMini(recordList.get(0).getStr("u_phone"),oId.toString(),3);
-				}catch (Exception ex){}
+
+				//发送短信
+				List<Record> recordList = Db.find("select b.u_phone from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
+				PhoneVerificationCode.sendMini(recordList.get(0).getStr("u_phone"),oId.toString(),3);
 				return true;
 			}
 		}

@@ -135,9 +135,6 @@ public class MiniController extends BaseController {
                 Integer paymentStatus = record.getInt("payment_status");
                 Integer orderStatus = record.getInt("order_status");
                 Integer extraStatus = record.getInt("extra_status");
-
-                //发送短信
-                PhoneVerificationCode.sendMini(record.getStr("s_phone"),oId.toString(),1);
                 if(type==1 && paymentStatus==1 && orderStatus==1 || type==2 && extraStatus==1){
                     resultStr = "支付成功";
                 }else{
