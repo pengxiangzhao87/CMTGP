@@ -132,6 +132,8 @@ public class MiniController extends BaseController {
             List<Record> records = Db.find(sb.toString());
             if(records.size()>0){
                 Record record = records.get(0);
+                //发送短信
+                PhoneVerificationCode.sendMini(record.getStr("s_phone"),oId.toString(),1);
                 Integer paymentStatus = record.getInt("payment_status");
                 Integer orderStatus = record.getInt("order_status");
                 Integer extraStatus = record.getInt("extra_status");

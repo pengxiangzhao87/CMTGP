@@ -54,7 +54,7 @@ public class PhoneVerificationCode {
         //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
         try{
             List<GlobalConf> confList = GlobalConf.dao.find("select * from t_global_conf where c_type=5");
-            DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", confList.get(0).getCAppid(), confList.get(0).getApiSecuret());
+            DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", confList.get(0).getCAppid(), confList.get(0).getCSecret());
             IAcsClient client = new DefaultAcsClient(profile);
             CommonRequest request = new CommonRequest();
             request.setSysMethod(MethodType.POST);
@@ -90,31 +90,29 @@ public class PhoneVerificationCode {
 
 
 
-    public static void main(String[] args) {
-        //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
-        //LTAI4GF9FfUZkBrrx9Qf4cVk
-        //jUw3iB924bCCebGrIIWGEs4pJLf2Hl
-        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", "", "");
-        IAcsClient client = new DefaultAcsClient(profile);
-        CommonRequest request = new CommonRequest();
-        request.setSysMethod(MethodType.POST);
-        //域名，请勿修改
-        request.setSysDomain("dysmsapi.aliyuncs.com");
-        //API版本号，请勿修改
-        request.setSysVersion("2017-05-25");
-        //API名称
-        request.setSysAction("SendSms");
-        //接收号码，格式为：国际码+号码，必填
-        request.putQueryParameter("PhoneNumbers", "8618614061833");
-        request.putQueryParameter("SignName", "食朝夕");
-        request.putQueryParameter("TemplateCode", "SMS_202821703");
-        request.putQueryParameter("TemplateParam", "{\"product\":\"1234\"}");
-//        request.putQueryParameter("SmsUpExtendCode", "12345");
-        try {
-            CommonResponse response = client.getCommonResponse(request);
-            System.out.println(response.getData());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public static void main(String[] args) {
+//        //初始化acsClient,<accessKeyId>和"<accessSecret>"在短信控制台查询即可。
+//        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", "", "");
+//        IAcsClient client = new DefaultAcsClient(profile);
+//        CommonRequest request = new CommonRequest();
+//        request.setSysMethod(MethodType.POST);
+//        //域名，请勿修改
+//        request.setSysDomain("dysmsapi.aliyuncs.com");
+//        //API版本号，请勿修改
+//        request.setSysVersion("2017-05-25");
+//        //API名称
+//        request.setSysAction("SendSms");
+//        //接收号码，格式为：国际码+号码，必填
+//        request.putQueryParameter("PhoneNumbers", "8618614061833");
+//        request.putQueryParameter("SignName", "食朝夕");
+//        request.putQueryParameter("TemplateCode", "SMS_202821703");
+//        request.putQueryParameter("TemplateParam", "{\"product\":\"121212121\"}");
+////        request.putQueryParameter("SmsUpExtendCode", "12345");
+//        try {
+//            CommonResponse response = client.getCommonResponse(request);
+//            System.out.println(response.getData());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

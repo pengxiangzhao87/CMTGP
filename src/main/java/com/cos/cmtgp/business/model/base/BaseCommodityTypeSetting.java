@@ -45,4 +45,13 @@ public abstract class BaseCommodityTypeSetting<M extends BaseCommodityTypeSettin
 		return getLong("p_code");
 	}
 
+	public M setTOff(java.lang.Integer tOff) {
+		set("t_off", tOff);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getTOff() {
+		return getInt("t_off");
+	}
+
 }

@@ -88,10 +88,11 @@ public class CommodityController extends BaseController {
 			String sql = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,c.s_corporate_name, " +
 					" a.s_price,concat('/',a.s_unit) as unit,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
 					" from t_commodity_info a " +
+					" inner join t_commodity_type_setting e on a.t_id=e.t_id " +
 					" left join t_shopping_info b on a.s_id=b.s_id and b.u_id="+ userId +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where p_id=1 and is_active="+ status +
+					" where p_id=1 and e.t_off=0 and is_active="+ status +
 					" group by a.s_id order by sales desc,a.s_id desc  limit 20 ";
 			List<Record> recordList = Db.find(sql);
 			renderSuccess("",recordList);

@@ -63,13 +63,13 @@ public abstract class BaseOrderDetail<M extends BaseOrderDetail<M>> extends Mode
 		return getInt("is_send");
 	}
 
-	public M setRefundId(java.lang.String refundId) {
-		set("refund_id", refundId);
+	public M setChargebackStatus(java.lang.Integer chargebackStatus) {
+		set("chargeback_status", chargebackStatus);
 		return (M)this;
 	}
 	
-	public java.lang.String getRefundId() {
-		return getStr("refund_id");
+	public java.lang.Integer getChargebackStatus() {
+		return getInt("chargeback_status");
 	}
 
 	public M setOutRefundNo(java.lang.String outRefundNo) {
@@ -81,13 +81,13 @@ public abstract class BaseOrderDetail<M extends BaseOrderDetail<M>> extends Mode
 		return getStr("out_refund_no");
 	}
 
-	public M setChargebackStatus(java.lang.Integer chargebackStatus) {
-		set("chargeback_status", chargebackStatus);
+	public M setRefundId(java.lang.String refundId) {
+		set("refund_id", refundId);
 		return (M)this;
 	}
 	
-	public java.lang.Integer getChargebackStatus() {
-		return getInt("chargeback_status");
+	public java.lang.String getRefundId() {
+		return getStr("refund_id");
 	}
 
 	public M setIsExtra(java.lang.Integer isExtra) {
@@ -135,6 +135,15 @@ public abstract class BaseOrderDetail<M extends BaseOrderDetail<M>> extends Mode
 		return getInt("extra_pay_status");
 	}
 
+	public M setExtraPayBackStatus(java.lang.Integer extraPayBackStatus) {
+		set("extra_pay_back_status", extraPayBackStatus);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getExtraPayBackStatus() {
+		return getInt("extra_pay_back_status");
+	}
+
 	public M setExtraRefundId(java.lang.String extraRefundId) {
 		set("extra_refund_id", extraRefundId);
 		return (M)this;
@@ -151,15 +160,6 @@ public abstract class BaseOrderDetail<M extends BaseOrderDetail<M>> extends Mode
 	
 	public java.lang.String getExtraOutRefundNo() {
 		return getStr("extra_out_refund_no");
-	}
-
-	public M setExtraPayBackStatus(java.lang.Integer extraPayBackStatus) {
-		set("extra_pay_back_status", extraPayBackStatus);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getExtraPayBackStatus() {
-		return getInt("extra_pay_back_status");
 	}
 
 	public M setExtraBackStatus(java.lang.Integer extraBackStatus) {

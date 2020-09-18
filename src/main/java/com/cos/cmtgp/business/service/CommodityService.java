@@ -15,7 +15,7 @@ import com.jfinal.plugin.activerecord.Record;
 public class CommodityService {
 
 	public List<CommodityTypeSetting> selectCategoryList(){
-		return CommodityTypeSetting.dao.find("select *from t_commodity_type_setting");
+		return CommodityTypeSetting.dao.find("select *from t_commodity_type_setting where t_off=0");
 	}
 
 	/**
@@ -31,10 +31,11 @@ public class CommodityService {
 			" concat('/',a.s_unit) as unit, " +
 			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state ";
 		String from = " from t_commodity_info a " +
+					" inner join t_commodity_type_setting e on a.t_id=e.t_id  " +
 					" left join t_supplier_setting c on a.p_id=c.s_id" +
 					" left join t_shopping_info b on a.s_id=b.s_id "+ (userId==null?"":"and b.u_id="+userId) +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where 1=1 ";
+					" where e.t_off=0 ";
 		if(tId!=-1){
 			from += " and a.t_id="+tId;
 		}
