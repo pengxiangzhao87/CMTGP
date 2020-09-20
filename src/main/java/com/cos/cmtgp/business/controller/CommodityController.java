@@ -10,6 +10,8 @@ import com.cos.cmtgp.business.model.SupplierSetting;
 import com.cos.cmtgp.business.service.CommodityService;
 import com.cos.cmtgp.common.base.BaseController;
 import com.cos.cmtgp.common.vo.User;
+import com.jfinal.json.FastJson;
+import com.jfinal.kit.HttpKit;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
@@ -35,6 +37,124 @@ public class CommodityController extends BaseController {
 			ex.printStackTrace();
 			renderFailed();
 		}
+	}
+
+	/**
+	 * 商户
+	 * APP
+	 * 查询商品
+	 */
+	public void queryGoods(){
+		Integer tId = getParaToInt("tId");
+		String tName = getPara("tName");
+		Integer pageNo = getPager().getPage();
+		Integer pageSize = getPager().getRows();
+		String select = "select s_id,s_name ,concat(s_price,'/',s_unit) as unit,concat(price_unit,'/',case init_unit when 1 then '个' else '50g' end) as price,state";
+		String from = "from t_commodity_info where 1=1";
+		if(tId!=0){
+			from += " and t_id="+tId;
+		}
+		if(!"".equals(tName)){
+			from += " and s_name like '%"+tName+"%'";
+		}
+		from += " order by update_time desc";
+		Page<Record> paginate = Db.paginate(pageNo, pageSize, select, from);
+		renderSuccess("",paginate);
+	}
+
+	public void queryOneGoods(){
+		Integer sId = getParaToInt("sId");
+		CommodityInfo commodityInfo = CommodityInfo.dao.findById(sId);
+		renderSuccess("",commodityInfo);
+	}
+
+	/**
+	 * 商户app
+	 * 上下线
+	 */
+	public void updateState(){
+		Integer sId = getParaToInt("sId");
+		Integer state = getParaToInt("state");
+		Db.update("update t_commodity_info set state="+state+",update_time=now() where s_id="+sId);
+		renderSuccess();
+	}
+
+
+	/**
+	 * 商户APP
+	 * 删除
+	 */
+	public void deleteGoods(){
+		Integer sId = getParaToInt("sId");
+		Db.update("delete from t_commodity_info where s_id="+sId);
+		renderSuccess();
+	}
+
+	/**
+	 * 商户APP
+	 * 新增
+	 */
+	public void addGoods(){
+		String json = HttpKit.readData(getRequest());
+		CommodityInfo commodity = FastJson.getJson().parse(json,CommodityInfo.class);
+		commodity.setUpdateTime(new Date());
+		commodity.save();
+		renderSuccess("",commodity.getSId());
+	}
+
+
+	public void addGoodsPic(){
+		UploadFile file = getFile();
+		Integer sId = getParaToInt("sId");
+		if(file!=null) {
+			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
+			String sAddressImg = commodity.getSAddressImg();
+			String name = sId+"_"+System.currentTimeMillis()+".png";
+			String path = PathKit.getWebRootPath()+"/upload/"+name;
+			file.getFile().renameTo(new File(path));
+			if(sAddressImg==null){
+				commodity.setSAddressImg(name);
+			}else{
+				commodity.setSAddressImg(sAddressImg +"~"+name);
+			}
+
+			commodity.update();
+		}
+		renderSuccess();
+	}
+
+	public void addGoodsDesc(){
+		UploadFile file = getFile();
+		Integer sId = getParaToInt("sId");
+		if(file!=null) {
+			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
+			String sDesc = commodity.getSDesc();
+			String name = sId+"_"+System.currentTimeMillis()+".png";
+			String path = PathKit.getWebRootPath()+"/upload/"+name;
+			file.getFile().renameTo(new File(path));
+			if(sDesc==null){
+				commodity.setSDesc(name);
+			}else{
+				commodity.setSDesc(sDesc +"~"+name);
+			}
+			commodity.update();
+		}
+		renderSuccess();
+	}
+
+	public void addGoodsVideo(){
+		UploadFile file = getFile();
+		Integer sId = getParaToInt("sId");
+		if(file!=null) {
+			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
+			String video = commodity.getSAddressVideo();
+			String name = sId+"_"+System.currentTimeMillis()+".mp4";
+			String path = PathKit.getWebRootPath()+"/upload/"+name;
+			file.getFile().renameTo(new File(path));
+			commodity.setSAddressVideo(name);
+			commodity.update();
+		}
+		renderSuccess();
 	}
 
 	/**

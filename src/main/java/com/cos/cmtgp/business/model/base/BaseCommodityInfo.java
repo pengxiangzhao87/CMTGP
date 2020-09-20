@@ -162,4 +162,13 @@ public abstract class BaseCommodityInfo<M extends BaseCommodityInfo<M>> extends 
 		return get("original_price");
 	}
 
+	public M setUpdateTime(java.util.Date updateTime) {
+		set("update_time", updateTime);
+		return (M)this;
+	}
+	
+	public java.util.Date getUpdateTime() {
+		return get("update_time");
+	}
+
 }
