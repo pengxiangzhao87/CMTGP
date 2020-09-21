@@ -738,25 +738,18 @@ public class MiniController extends BaseController {
                 String userInfo = new String(resultByte, "UTF-8");
                 JSONObject userJson = JSON.parseObject(userInfo);
                 String phone = userJson.getString("phoneNumber");
-                List<Record> recordList = Db.find("select * from t_user_setting where u_phone='" + phone + "'");
+                List<Record> recordList = Db.find("select * from t_user_setting where u_openid='" + openid + "'");
                 Map<String,Object> map = new HashMap<String, Object>();
-                map.put("isPhone",0);
                 if(recordList.size()>0){
                     Integer uId = recordList.get(0).getInt("u_id");
-                    if(Db.update("update t_user_setting set u_openid='"+openid+"' where u_id="+uId)>0){
+                    if(Db.update("update t_user_setting set u_phone='"+phone+"' where u_id="+uId)>0){
                         map.put("uId",uId);
                         renderSuccess("",map);
                     }else{
                         renderFailed();
                     }
                 }else{
-                    UserSetting userSetting = new UserSetting();
-                    userSetting.setUOpenid(openid);
-                    userSetting.setUPhone(phone);
-                    userSetting.setUAvatarUrl("userAvatar.jpg");
-                    userSetting.save();
-                    map.put("uId",userSetting.getUId());
-                    renderSuccess("",map);
+                    renderFailed();
                 }
             } else {
                 renderFailed();
