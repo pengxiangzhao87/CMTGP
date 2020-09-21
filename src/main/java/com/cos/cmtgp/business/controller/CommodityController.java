@@ -9,6 +9,7 @@ import com.cos.cmtgp.business.model.CommodityTypeSetting;
 import com.cos.cmtgp.business.model.SupplierSetting;
 import com.cos.cmtgp.business.service.CommodityService;
 import com.cos.cmtgp.common.base.BaseController;
+import com.cos.cmtgp.common.util.StringUtil;
 import com.cos.cmtgp.common.vo.User;
 import com.jfinal.json.FastJson;
 import com.jfinal.kit.HttpKit;
@@ -47,10 +48,11 @@ public class CommodityController extends BaseController {
 	public void queryGoods(){
 		Integer tId = getParaToInt("tId");
 		String tName = getPara("tName");
+		Integer pId = getParaToInt("pId");
 		Integer pageNo = getPager().getPage();
 		Integer pageSize = getPager().getRows();
 		String select = "select s_id,s_name ,concat(s_price,'/',s_unit) as unit,concat(price_unit,'/',case init_unit when 1 then '个' else '50g' end) as price,state";
-		String from = "from t_commodity_info where 1=1";
+		String from = "from t_commodity_info where p_id="+pId;
 		if(tId!=0){
 			from += " and t_id="+tId;
 		}
@@ -86,7 +88,37 @@ public class CommodityController extends BaseController {
 	 */
 	public void deleteGoods(){
 		Integer sId = getParaToInt("sId");
-		Db.update("delete from t_commodity_info where s_id="+sId);
+		CommodityInfo commodityInfo = CommodityInfo.dao.findById(sId);
+		if(commodityInfo!=null){
+			String sAddressImg = commodityInfo.getSAddressImg();
+			if(!"".equals(sAddressImg) && sAddressImg!=null){
+				String[] split = sAddressImg.split("~");
+				for(String item : split){
+					File file = new File(PathKit.getWebRootPath() + "/upload/" + item);
+					if(file.exists()){
+						file.delete();
+					}
+				}
+			}
+			String sDesc = commodityInfo.getSDesc();
+			if(!"".equals(sDesc) && sDesc!=null){
+				String[] split = sDesc.split("~");
+				for(String item : split){
+					File file = new File(PathKit.getWebRootPath() + "/upload/" + item);
+					if(file.exists()){
+						file.delete();
+					}
+				}
+			}
+			String sAddressVideo = commodityInfo.getSAddressVideo();
+			if(!"".equals(sAddressVideo) && sAddressVideo!=null){
+				File file = new File(PathKit.getWebRootPath() + "/upload/" + sAddressVideo);
+				if(file.exists()){
+					file.delete();
+				}
+			}
+			commodityInfo.delete();
+		}
 		renderSuccess();
 	}
 
@@ -96,10 +128,35 @@ public class CommodityController extends BaseController {
 	 */
 	public void addGoods(){
 		String json = HttpKit.readData(getRequest());
+		CommodityInfo a = FastJson.getJson().parse(json,CommodityInfo.class);
 		CommodityInfo commodity = FastJson.getJson().parse(json,CommodityInfo.class);
 		commodity.setUpdateTime(new Date());
 		commodity.save();
 		renderSuccess("",commodity.getSId());
+	}
+
+	/**
+	 * 商户APP
+	 * 新增
+	 */
+	public void updateGoods(){
+		String json = HttpKit.readData(getRequest());
+		Map parse = FastJson.getJson().parse(json, Map.class);
+		String delete = (String)parse.get("delete");
+		Object model = parse.get("model");
+		CommodityInfo commodity = FastJson.getJson().parse(FastJson.getJson().toJson(model),CommodityInfo.class);
+		commodity.setUpdateTime(new Date());
+ 		commodity.update();
+ 		if(!"".equals(delete)){
+			String[] split = delete.split("~");
+			for(String item : split){
+				File file = new File(PathKit.getWebRootPath() + "/upload/" + item);
+				if(file.exists()){
+					file.delete();
+				}
+			}
+		}
+		renderSuccess();
 	}
 
 
@@ -112,7 +169,7 @@ public class CommodityController extends BaseController {
 			String name = sId+"_"+System.currentTimeMillis()+".png";
 			String path = PathKit.getWebRootPath()+"/upload/"+name;
 			file.getFile().renameTo(new File(path));
-			if(sAddressImg==null){
+			if(sAddressImg==null || "".equals(sAddressImg)){
 				commodity.setSAddressImg(name);
 			}else{
 				commodity.setSAddressImg(sAddressImg +"~"+name);
@@ -132,7 +189,7 @@ public class CommodityController extends BaseController {
 			String name = sId+"_"+System.currentTimeMillis()+".png";
 			String path = PathKit.getWebRootPath()+"/upload/"+name;
 			file.getFile().renameTo(new File(path));
-			if(sDesc==null){
+			if(sDesc==null || "".equals(sDesc)){
 				commodity.setSDesc(name);
 			}else{
 				commodity.setSDesc(sDesc +"~"+name);
@@ -147,7 +204,6 @@ public class CommodityController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		if(file!=null) {
 			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
-			String video = commodity.getSAddressVideo();
 			String name = sId+"_"+System.currentTimeMillis()+".mp4";
 			String path = PathKit.getWebRootPath()+"/upload/"+name;
 			file.getFile().renameTo(new File(path));
