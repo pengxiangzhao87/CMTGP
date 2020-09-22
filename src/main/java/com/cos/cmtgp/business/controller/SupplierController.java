@@ -24,6 +24,19 @@ import java.util.Map;
 public class SupplierController extends BaseController {
 	SupplierService supplierService = enhance(SupplierService.class);
 
+	public void getSupplier(){
+		Integer tId = getParaToInt("tId");
+		SupplierSetting byId = SupplierSetting.dao.findById(tId);
+		renderSuccess("",byId);
+	}
+
+	public void bindPhone(){
+		String phone = getPara("phone");
+		Integer sId = getParaToInt("sId");
+		Db.update("update t_supplier_setting set s_phone='"+phone+"' where s_id="+sId);
+		renderSuccess();
+	}
+
 	/**
 	 * 商户登录
 	 */
