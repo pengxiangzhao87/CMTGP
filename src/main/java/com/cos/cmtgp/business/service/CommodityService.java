@@ -35,7 +35,7 @@ public class CommodityService {
 					" left join t_supplier_setting c on a.p_id=c.s_id" +
 					" left join t_shopping_info b on a.s_id=b.s_id "+ (userId==null?"":"and b.u_id="+userId) +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where e.t_off=0 ";
+					" where e.t_off=0 and a.state=1 ";
 		if(tId!=-1){
 			from += " and a.t_id="+tId;
 		}

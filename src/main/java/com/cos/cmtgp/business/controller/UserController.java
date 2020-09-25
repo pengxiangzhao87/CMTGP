@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import com.alibaba.fastjson.JSONObject;
 import com.cos.cmtgp.business.model.AddressInfo;
+import com.cos.cmtgp.business.model.FeedbackInfo;
 import com.cos.cmtgp.business.model.UserSetting;
 import com.cos.cmtgp.business.service.UserService;
 import com.cos.cmtgp.common.base.BaseController;
@@ -14,7 +15,6 @@ import com.jfinal.json.FastJson;
 import com.jfinal.kit.HttpKit;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
-import com.jfinal.plugin.activerecord.Record;
 
 import com.jfinal.upload.UploadFile;
 
@@ -23,6 +23,18 @@ import com.jfinal.upload.UploadFile;
  */
 public class UserController extends BaseController {
 	UserService userService = enhance(UserService.class);
+
+
+	public void feedBack(){
+		String content = getPara("content");
+		Integer uId = getParaToInt("uId");
+		FeedbackInfo feedbackInfo = new FeedbackInfo();
+		feedbackInfo.setContent(content);
+		feedbackInfo.setUId(uId);
+		feedbackInfo.setCreateTime(new Date());
+		feedbackInfo.save();
+		renderSuccess();
+	}
 
 
 	/**

@@ -128,7 +128,6 @@ public class CommodityController extends BaseController {
 	 */
 	public void addGoods(){
 		String json = HttpKit.readData(getRequest());
-		CommodityInfo a = FastJson.getJson().parse(json,CommodityInfo.class);
 		CommodityInfo commodity = FastJson.getJson().parse(json,CommodityInfo.class);
 		commodity.setUpdateTime(new Date());
 		commodity.save();
