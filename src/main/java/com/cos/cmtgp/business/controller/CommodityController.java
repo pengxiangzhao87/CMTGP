@@ -160,42 +160,46 @@ public class CommodityController extends BaseController {
 
 
 	public void addGoodsPic(){
-		UploadFile file = getFile();
-		Integer sId = getParaToInt("sId");
-		if(file!=null) {
-			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
-			String sAddressImg = commodity.getSAddressImg();
-			String name = sId+"_"+System.currentTimeMillis()+".png";
-			String path = PathKit.getWebRootPath()+"/upload/"+name;
-			file.getFile().renameTo(new File(path));
-			if(sAddressImg==null || "".equals(sAddressImg)){
-				commodity.setSAddressImg(name);
-			}else{
-				commodity.setSAddressImg(sAddressImg +"~"+name);
-			}
+		synchronized(CommodityInfo.class) {
+			UploadFile file = getFile();
+			Integer sId = getParaToInt("sId");
+			if (file != null) {
+				CommodityInfo commodity = CommodityInfo.dao.findById(sId);
+				String sAddressImg = commodity.getSAddressImg();
+				String name = sId + "_" + System.currentTimeMillis() + ".png";
+				String path = PathKit.getWebRootPath() + "/upload/" + name;
+				file.getFile().renameTo(new File(path));
+				if (sAddressImg == null || "".equals(sAddressImg)) {
+					commodity.setSAddressImg(name);
+				} else {
+					commodity.setSAddressImg(sAddressImg + "~" + name);
+				}
 
-			commodity.update();
+				commodity.update();
+			}
+			renderSuccess();
 		}
-		renderSuccess();
 	}
 
 	public void addGoodsDesc(){
-		UploadFile file = getFile();
-		Integer sId = getParaToInt("sId");
-		if(file!=null) {
-			CommodityInfo commodity = CommodityInfo.dao.findById(sId);
-			String sDesc = commodity.getSDesc();
-			String name = sId+"_"+System.currentTimeMillis()+".png";
-			String path = PathKit.getWebRootPath()+"/upload/"+name;
-			file.getFile().renameTo(new File(path));
-			if(sDesc==null || "".equals(sDesc)){
-				commodity.setSDesc(name);
-			}else{
-				commodity.setSDesc(sDesc +"~"+name);
+		synchronized(CommodityInfo.class) {
+			UploadFile file = getFile();
+			Integer sId = getParaToInt("sId");
+			if(file!=null) {
+				CommodityInfo commodity = CommodityInfo.dao.findById(sId);
+				String sDesc = commodity.getSDesc();
+				String name = sId+"_"+System.currentTimeMillis()+".png";
+				String path = PathKit.getWebRootPath()+"/upload/"+name;
+				file.getFile().renameTo(new File(path));
+				if(sDesc==null || "".equals(sDesc)){
+					commodity.setSDesc(name);
+				}else{
+					commodity.setSDesc(sDesc +"~"+name);
+				}
+				commodity.update();
 			}
-			commodity.update();
+			renderSuccess();
 		}
-		renderSuccess();
 	}
 
 	public void addGoodsVideo(){
