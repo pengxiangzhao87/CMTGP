@@ -6,10 +6,8 @@ import java.util.*;
 
 import com.cos.cmtgp.business.model.CommodityInfo;
 import com.cos.cmtgp.business.model.CommodityTypeSetting;
-import com.cos.cmtgp.business.model.SupplierSetting;
 import com.cos.cmtgp.business.service.CommodityService;
 import com.cos.cmtgp.common.base.BaseController;
-import com.cos.cmtgp.common.util.StringUtil;
 import com.cos.cmtgp.common.vo.User;
 import com.jfinal.json.FastJson;
 import com.jfinal.kit.HttpKit;
@@ -17,8 +15,8 @@ import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
-import com.jfinal.plugin.ehcache.CacheKit;
 import com.jfinal.upload.UploadFile;
+import com.sun.deploy.util.StringUtils;
 
 /**
  *	  商品管理接口
@@ -158,23 +156,22 @@ public class CommodityController extends BaseController {
 		renderSuccess();
 	}
 
-
 	public void addGoodsPic(){
 		synchronized(CommodityInfo.class) {
 			UploadFile file = getFile();
 			Integer sId = getParaToInt("sId");
+			Integer idx = getParaToInt("idx");
 			if (file != null) {
 				CommodityInfo commodity = CommodityInfo.dao.findById(sId);
 				String sAddressImg = commodity.getSAddressImg();
 				String name = sId + "_" + System.currentTimeMillis() + ".png";
 				String path = PathKit.getWebRootPath() + "/upload/" + name;
 				file.getFile().renameTo(new File(path));
-				if (sAddressImg == null || "".equals(sAddressImg)) {
-					commodity.setSAddressImg(name);
-				} else {
-					commodity.setSAddressImg(sAddressImg + "~" + name);
-				}
-
+				String[] split = sAddressImg.split("~");
+				List<String> strList = new ArrayList<String>(Arrays.asList(split));
+				strList.set(idx,name);
+				String join = StringUtils.join(strList, "~");
+				commodity.setSAddressImg(join);
 				commodity.update();
 			}
 			renderSuccess();
@@ -185,17 +182,18 @@ public class CommodityController extends BaseController {
 		synchronized(CommodityInfo.class) {
 			UploadFile file = getFile();
 			Integer sId = getParaToInt("sId");
+			Integer idx = getParaToInt("idx");
 			if(file!=null) {
 				CommodityInfo commodity = CommodityInfo.dao.findById(sId);
 				String sDesc = commodity.getSDesc();
 				String name = sId+"_"+System.currentTimeMillis()+".png";
 				String path = PathKit.getWebRootPath()+"/upload/"+name;
 				file.getFile().renameTo(new File(path));
-				if(sDesc==null || "".equals(sDesc)){
-					commodity.setSDesc(name);
-				}else{
-					commodity.setSDesc(sDesc +"~"+name);
-				}
+				String[] split = sDesc.split("~");
+				List<String> strList = new ArrayList<String>(Arrays.asList(split));
+				strList.set(idx,name);
+				String join = StringUtils.join(strList, "~");
+		 		commodity.setSDesc(join);
 				commodity.update();
 			}
 			renderSuccess();
