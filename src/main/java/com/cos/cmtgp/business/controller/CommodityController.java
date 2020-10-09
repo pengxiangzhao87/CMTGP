@@ -16,7 +16,8 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
-import com.sun.deploy.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+
 
 /**
  *	  商品管理接口
