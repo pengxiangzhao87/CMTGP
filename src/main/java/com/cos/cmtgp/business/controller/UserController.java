@@ -256,7 +256,7 @@ public class UserController extends BaseController {
 						Map<String, Object> jsonMap = (Map) JSONObject.parse(phoneCode);
 						long time = Long.parseLong(jsonMap.get("time").toString());
 						long now = System.currentTimeMillis();
-						if (now - time > 5 * 60 * 1000) {
+						if (now - time > 30 * 60 * 1000) {
 							removeSessionAttr(phone);
 							renderFailed("验证码失效");
 						} else if(!verifyCode.equals(jsonMap.get("verifyCode").toString())){

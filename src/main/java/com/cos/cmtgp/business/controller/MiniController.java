@@ -708,7 +708,7 @@ public class MiniController extends BaseController {
                 File f = new File(path + fileName);
                 FileUtils.copyURLToFile(httpurl, f);
                 if(Db.update("update t_user_setting set u_nick_name='"+nickName+"',u_avatar_url='"+fileName+"' where u_openid='"+openid+"'")>0){
-                    renderSuccess();
+                    renderSuccess(fileName);
                 }else{
                     renderFailed();
                 }
