@@ -25,24 +25,26 @@ public class CommodityService {
 	 * @param sName
 	 * @return
 	 */
-	public Page<Record> queryCommodityList(Integer userId,Integer pageNo,Integer pageSize,Integer tId,String sName){
+	public Page<Record> queryCommodityList(Integer userId,String areaFlag,Integer pageNo,Integer pageSize,Integer tId,String sName){
 		String select = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit," +
 			" a.s_price,a.original_price,a.is_active, " +
 			" concat('/',a.s_unit) as unit, " +
-			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state ";
+			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag ";
 		String from = " from t_commodity_info a " +
 					" inner join t_commodity_type_setting e on a.t_id=e.t_id  " +
 					" left join t_supplier_setting c on a.p_id=c.s_id" +
 					" left join t_shopping_info b on a.s_id=b.s_id "+ (userId==null?"":"and b.u_id="+userId) +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where e.t_off=0 and a.state=1 ";
+					" where a.dr=0 and e.t_off=0 ";
 		if(tId!=-1){
 			from += " and a.t_id="+tId;
 		}
 		if(!"".equals(sName) && sName!=null){
 			from += " and a.s_name like '%"+sName+"%'";
 		}
-		from += " group by a.s_id order by sales desc,a.s_id desc";
+		from += " group by a.s_id order by FIELD(a.delivery_area,"+areaFlag+") desc,sales desc";
+
+
 		Page<Record> paginate = Db.paginate(pageNo, pageSize, select, from);
 
 		return paginate;
@@ -53,8 +55,8 @@ public class CommodityService {
 	 * @param sId
 	 * @return
 	 */
-	public Record queryCommodity(Integer sId,Integer userId){
-		String sqlStr = " select a.s_id,a.is_active,a.original_price,a.s_name,a.s_address_img,a.s_address_video,a.s_desc,a.sales_desc,a.price_unit, " +
+	public Record queryCommodity(Integer sId,Integer userId,String areaFlag){
+		String sqlStr = " select find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag,a.s_id,a.is_active,a.original_price,a.s_name,a.s_address_img,a.s_address_video,a.s_desc,a.sales_desc,a.price_unit, " +
 				" CONCAT('￥',a.s_price) as price, " +
 				" concat('/',a.s_unit) as unit, " +
 				" a.init_num, a.init_unit,a.state, " +

@@ -51,7 +51,7 @@ public class CommodityController extends BaseController {
 		Integer pageNo = getPager().getPage();
 		Integer pageSize = getPager().getRows();
 		String select = "select s_id,s_name ,concat(s_price,'/',s_unit) as unit,concat(price_unit,'/',case init_unit when 1 then '个' else '50g' end) as price,state";
-		String from = "from t_commodity_info where p_id="+pId;
+		String from = "from t_commodity_info where dr=0 and p_id="+pId;
 		if(tId!=0){
 			from += " and t_id="+tId;
 		}
@@ -228,10 +228,11 @@ public class CommodityController extends BaseController {
 		Integer tId = getParaToInt("tId");
 		String sName = getPara("sName");
 		Integer userId = getParaToInt("userId");
+		String areaFlag = getPara("areaFlag");
 		try{
-			renderSuccess("",commodityService.queryCommodityList(userId,pageNo,pageSize, tId, sName));
+			renderSuccess("",commodityService.queryCommodityList(userId,areaFlag,pageNo,pageSize, tId, sName));
 		}catch(Exception ex){
-			addOpLog("queryCommodityByPage ===> pageNo"+pageNo+",tId="+tId+",sName="+sName+",userId="+userId);
+			addOpLog("queryCommodityByPage ===> pageNo"+pageNo+",areaFlag="+areaFlag+",tId="+tId+",sName="+sName+",userId="+userId);
 			ex.printStackTrace();
 			renderFailed();
 		}
@@ -244,8 +245,9 @@ public class CommodityController extends BaseController {
 	public void queryCollage(){
 		Integer sId = getParaToInt("sId");
 		Integer userId = getParaToInt("userId");
+		String areaFlag = getPara("areaFlag");
 		try{
-			renderSuccess("",commodityService.queryCommodity(sId,userId));
+			renderSuccess("",commodityService.queryCommodity(sId,userId,areaFlag));
 		}catch (Exception ex){
 			addOpLog("queryCollage ====> sId"+sId+",userId="+userId);
 			ex.printStackTrace();
@@ -262,16 +264,17 @@ public class CommodityController extends BaseController {
 	public void queryActive(){
 		Integer userId = getParaToInt("userId");
 		Integer status = getParaToInt("status");
+		String areaFlag = getPara("areaFlag");
 		try{
 			String sql = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,c.s_corporate_name, " +
-					" a.s_price,concat('/',a.s_unit) as unit,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
+					" a.s_price,concat('/',a.s_unit) as unit,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag " +
 					" from t_commodity_info a " +
 					" inner join t_commodity_type_setting e on a.t_id=e.t_id " +
 					" left join t_shopping_info b on a.s_id=b.s_id and b.u_id="+ userId +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where p_id=1 and e.t_off=0 and is_active="+ status +
-					" group by a.s_id order by sales desc,a.s_id desc  limit 20 ";
+					" where a.dr=0 and e.t_off=0 and a.is_active="+ status +
+					" group by a.s_id order by FIELD(a.delivery_area,"+areaFlag+")desc,sales desc limit 20";
 			List<Record> recordList = Db.find(sql);
 			renderSuccess("",recordList);
 		}catch (Exception ex){
@@ -288,25 +291,26 @@ public class CommodityController extends BaseController {
 	 */
 	public void queryOnSales(){
 		Integer userId = getParaToInt("userId");
+		String areaFlag = getPara("areaFlag");
 		try{
 			List<Record> recordList = new ArrayList<Record>();
 			String sqlOne = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
-					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
+					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag " +
 					" from t_commodity_info a " +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +
 					" left join t_shopping_info b on a.s_id=b.s_id and b.u_id="+ userId +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where p_id=1 and is_active=3 " +
-					" group by a.s_id order by sales desc,a.s_id desc  limit 15 ";
+					" where a.dr=0 and a.p_id=1 and a.is_active=3 " +
+					" group by a.s_id order by FIELD(a.delivery_area,"+areaFlag+")desc,sales desc limit 15";
 			recordList.addAll(Db.find(sqlOne));
 			String sqlTwo = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit,a.original_price, " +
-					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state " +
+					" a.s_price,concat('/',a.s_unit) as unit,c.s_corporate_name,case when b.id is null then 0 else 1 end as isCar,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag " +
 					" from t_commodity_info a " +
 					" left join t_supplier_setting c on a.p_id=c.s_id " +
 					" left join t_shopping_info b on a.s_id=b.s_id and b.u_id="+ userId +
 					" left join t_order_detail d on d.s_id=a.s_id " +
-					" where p_id=2 and is_active=3 " +
-					" group by a.s_id order by sales desc,a.s_id desc  limit 15 ";
+					" where a.dr=0 and a.p_id=2 and a.is_active=3 " +
+					" group by a.s_id order by FIELD(a.delivery_area,"+areaFlag+")desc,sales desc limit 15";
 			recordList.addAll(Db.find(sqlTwo));
 			Collections.shuffle(recordList,new Random(47));
 			renderSuccess("",recordList);

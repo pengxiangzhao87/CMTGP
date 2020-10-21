@@ -39,4 +39,8 @@ public class MiniUtil {
     public static final String NEW_ORDER = "6Pcxa3JKbmABTMowyVr_8hACo9u3xiAm3p80Y6DIycQ";
 
 
+    //二维码
+    public static final String QR_CODE = "https://api.weixin.qq.com/wxa/getwxacodeunlimit";
+
+
 }

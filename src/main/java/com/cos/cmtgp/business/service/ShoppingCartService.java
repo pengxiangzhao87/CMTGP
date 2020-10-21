@@ -54,7 +54,7 @@ public class ShoppingCartService {
                 " from t_shopping_info a " +
                 " left join t_commodity_info b on a.s_id=b.s_id " +
                 "  left join t_supplier_setting c on b.p_id=c.s_id " +
-                " where a.u_id="+userId + " order by a.id desc ";
+                " where a.u_id="+userId + " order by b.state desc ";
         List<Record> recordList = Db.find(sql);
         Map<String,List<Record>> map = new HashMap<String,List<Record>>();
         for(Record record : recordList){

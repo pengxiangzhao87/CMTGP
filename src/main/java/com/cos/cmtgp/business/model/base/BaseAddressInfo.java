@@ -27,69 +27,6 @@ public abstract class BaseAddressInfo<M extends BaseAddressInfo<M>> extends Mode
 		return getInt("u_id");
 	}
 
-	public M setAProvince(java.lang.String aProvince) {
-		set("a_province", aProvince);
-		return (M)this;
-	}
-	
-	public java.lang.String getAProvince() {
-		return getStr("a_province");
-	}
-
-	public M setACity(java.lang.String aCity) {
-		set("a_city", aCity);
-		return (M)this;
-	}
-	
-	public java.lang.String getACity() {
-		return getStr("a_city");
-	}
-
-	public M setADistrict(java.lang.String aDistrict) {
-		set("a_district", aDistrict);
-		return (M)this;
-	}
-	
-	public java.lang.String getADistrict() {
-		return getStr("a_district");
-	}
-
-	public M setAAdcode(java.lang.String aAdcode) {
-		set("a_adcode", aAdcode);
-		return (M)this;
-	}
-	
-	public java.lang.String getAAdcode() {
-		return getStr("a_adcode");
-	}
-
-	public M setAStreet(java.lang.String aStreet) {
-		set("a_street", aStreet);
-		return (M)this;
-	}
-	
-	public java.lang.String getAStreet() {
-		return getStr("a_street");
-	}
-
-	public M setADetail(java.lang.String aDetail) {
-		set("a_detail", aDetail);
-		return (M)this;
-	}
-	
-	public java.lang.String getADetail() {
-		return getStr("a_detail");
-	}
-
-	public M setIsUsed(java.lang.Integer isUsed) {
-		set("is_used", isUsed);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getIsUsed() {
-		return getInt("is_used");
-	}
-
 	public M setName(java.lang.String name) {
 		set("name", name);
 		return (M)this;
@@ -106,6 +43,60 @@ public abstract class BaseAddressInfo<M extends BaseAddressInfo<M>> extends Mode
 	
 	public java.lang.String getPhone() {
 		return getStr("phone");
+	}
+
+	public M setACity(java.lang.String aCity) {
+		set("a_city", aCity);
+		return (M)this;
+	}
+	
+	public java.lang.String getACity() {
+		return getStr("a_city");
+	}
+
+	public M setADetail(java.lang.String aDetail) {
+		set("a_detail", aDetail);
+		return (M)this;
+	}
+	
+	public java.lang.String getADetail() {
+		return getStr("a_detail");
+	}
+
+	public M setLatitude(java.lang.String latitude) {
+		set("latitude", latitude);
+		return (M)this;
+	}
+	
+	public java.lang.String getLatitude() {
+		return getStr("latitude");
+	}
+
+	public M setLongitude(java.lang.String longitude) {
+		set("longitude", longitude);
+		return (M)this;
+	}
+	
+	public java.lang.String getLongitude() {
+		return getStr("longitude");
+	}
+
+	public M setDistance(java.lang.String distance) {
+		set("distance", distance);
+		return (M)this;
+	}
+	
+	public java.lang.String getDistance() {
+		return getStr("distance");
+	}
+
+	public M setIsUsed(java.lang.Integer isUsed) {
+		set("is_used", isUsed);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getIsUsed() {
+		return getInt("is_used");
 	}
 
 }

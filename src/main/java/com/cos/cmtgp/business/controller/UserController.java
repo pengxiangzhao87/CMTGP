@@ -16,6 +16,7 @@ import com.jfinal.kit.HttpKit;
 import com.jfinal.kit.PathKit;
 import com.jfinal.plugin.activerecord.Db;
 
+import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.upload.UploadFile;
 
 /**
@@ -160,7 +161,22 @@ public class UserController extends BaseController {
 		try{
 			Db.update("update t_address_info set is_used=0 where u_id="+uId);
 			Db.update("update t_address_info set is_used=1 where a_id="+aId);
-			renderSuccess();
+			AddressInfo addressInfo = AddressInfo.dao.findById(aId);
+			String areaFlag = "0,1,2,3";//0:即时配送，1：北京，2：京津冀，3: 无限制
+			if(addressInfo.getIsUsed()==1){
+				if(!addressInfo.getACity().contains("北京") && !addressInfo.getACity().contains("天津") && !addressInfo.getACity().contains("河北")){
+					areaFlag = "3";
+				}else{
+					if(addressInfo.getACity().contains("北京") && Integer.valueOf(addressInfo.getDistance())>3000){
+						areaFlag = "1,2,3";
+					}else if(Integer.valueOf(addressInfo.getDistance())<=3000){
+						areaFlag = "0,1,2,3";
+					}else{
+						areaFlag = "2,3";
+					}
+				}
+			}
+			renderSuccess("",areaFlag);
 		}catch(Exception ex){
 			addOpLog("checkAddress ===>uId="+uId+",aId="+aId);
 			ex.printStackTrace();
@@ -177,16 +193,30 @@ public class UserController extends BaseController {
 		String json = HttpKit.readData(getRequest());
 		try{
 			AddressInfo address = FastJson.getJson().parse(json, AddressInfo.class);
+			String areaFlag = "0,1,2,3";//0:即时配送，1：北京，2：京津冀，3: 全国
+			if(address.getIsUsed()==1){
+				Db.update("update t_address_info set is_used=0 where u_id="+address.getUId());
+				if(!address.getACity().contains("北京") && !address.getACity().contains("天津") && !address.getACity().contains("河北")){
+					areaFlag = "3";
+				}else{
+					if(address.getACity().contains("北京") && Integer.valueOf(address.getDistance())>4000){
+						areaFlag = "1,2,3";
+					}else if(Integer.valueOf(address.getDistance())<=4000){
+						areaFlag = "0,1,2,3";
+					}else{
+						areaFlag = "2,3";
+					}
+				}
+			}
 			if(address.getAId()!=null){
 				if(address.update()){
-					renderSuccess();
+					renderSuccess("",areaFlag);
 				}else{
 					renderFailed();
 				}
 			}else{
-				Db.update("update t_address_info set is_used=0 where u_id="+address.getUId());
 				if(address.save()){
-					renderSuccess();
+					renderSuccess("",areaFlag);
 				}else{
 					renderFailed();
 				}

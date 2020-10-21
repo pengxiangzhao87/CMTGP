@@ -162,6 +162,15 @@ public abstract class BaseCommodityInfo<M extends BaseCommodityInfo<M>> extends 
 		return get("original_price");
 	}
 
+	public M setDeliveryArea(java.lang.Integer deliveryArea) {
+		set("delivery_area", deliveryArea);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getDeliveryArea() {
+		return getInt("delivery_area");
+	}
+
 	public M setUpdateTime(java.util.Date updateTime) {
 		set("update_time", updateTime);
 		return (M)this;
@@ -169,6 +178,15 @@ public abstract class BaseCommodityInfo<M extends BaseCommodityInfo<M>> extends 
 	
 	public java.util.Date getUpdateTime() {
 		return get("update_time");
+	}
+
+	public M setDr(java.lang.Integer dr) {
+		set("dr", dr);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getDr() {
+		return getInt("dr");
 	}
 
 }

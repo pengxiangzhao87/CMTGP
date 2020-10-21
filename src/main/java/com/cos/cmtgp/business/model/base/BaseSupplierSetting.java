@@ -108,4 +108,22 @@ public abstract class BaseSupplierSetting<M extends BaseSupplierSetting<M>> exte
 		return getStr("s_openid");
 	}
 
+	public M setLatitude(java.lang.String latitude) {
+		set("latitude", latitude);
+		return (M)this;
+	}
+	
+	public java.lang.String getLatitude() {
+		return getStr("latitude");
+	}
+
+	public M setLongitude(java.lang.String longitude) {
+		set("longitude", longitude);
+		return (M)this;
+	}
+	
+	public java.lang.String getLongitude() {
+		return getStr("longitude");
+	}
+
 }

@@ -663,12 +663,30 @@ public class MiniController extends BaseController {
             CacheKit.put("miniProgram",openid,sessionKey);
             Map<String,Object> map = new HashMap<String, Object>();
             map.put("token",rdSeesion);
+            String areaFlag = "0,1,2,3";//0:即时配送，1：北京，2：京津冀，3: 无限制
             if(recordList.size()>0){
                 map.put("uId",recordList.get(0).get("u_id"));
                 if(recordList.get(0).get("u_phone")!=null && !"".equals(recordList.get(0).getStr("u_phone"))){
                     map.put("isPhone",0);
                 }else{
                     map.put("isPhone",1);
+                }
+                List<Record> records = Db.find("select * from t_address_info where is_used=1 and u_id=" + recordList.get(0).get("u_id"));
+                if(records.size()>0){
+                    Record record = records.get(0);
+                    String aCity = record.get("a_city").toString();
+                    Integer distance = Integer.valueOf(record.get("distance").toString());
+                    if(!aCity.contains("北京") && !aCity.contains("天津") && !aCity.contains("河北")){
+                        areaFlag = "3";
+                    }else{
+                        if(aCity.contains("北京") && distance>3000){
+                            areaFlag = "1,2,3";
+                        }else if(distance<=3000){
+                            areaFlag = "0,1,2,3";
+                        }else{
+                            areaFlag = "2,3";
+                        }
+                    }
                 }
             }else{
                 UserSetting userSetting = new UserSetting();
@@ -677,6 +695,7 @@ public class MiniController extends BaseController {
                 map.put("uId",userSetting.getUId());
                 map.put("isPhone",1);
             }
+            map.put("areaFlag",areaFlag);
             renderSuccess("",map);
         }else{
             renderFailed();
@@ -744,6 +763,7 @@ public class MiniController extends BaseController {
                     Integer uId = recordList.get(0).getInt("u_id");
                     if(Db.update("update t_user_setting set u_phone='"+phone+"' where u_id="+uId)>0){
                         map.put("uId",uId);
+                        map.put("isPhone",0);
                         renderSuccess("",map);
                     }else{
                         renderFailed();
