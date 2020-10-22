@@ -47,8 +47,10 @@ public class ShoppingCartController extends BaseController {
 	 */
 	public void queryShoppingCartList(){
 		Integer userId = getParaToInt("userId");
+		String areaFlag = getPara("areaFlag");
+		Integer supId = getParaToInt("supId");
 		try{
-			renderSuccess("",shoppingCartService.queryShoppingCart(userId));
+			renderSuccess("",shoppingCartService.queryShoppingCart(userId,areaFlag,supId));
 		}catch (Exception ex){
 			addOpLog("queryShoppingCartList ====> userId="+userId);
 			ex.printStackTrace();
