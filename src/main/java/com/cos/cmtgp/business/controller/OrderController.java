@@ -98,23 +98,11 @@ public class OrderController extends BaseController {
 	 */
 	public void confirmSend(){
 		Integer oId = getParaToInt("oId");
-		Integer sId = getParaToInt("sId");
-
-		String sql = "select b.id,d.s_id,b.is_send,b.chargeback_status " +
-				"from t_order_detail b,t_commodity_info c ,t_supplier_setting d " +
-				"where b.s_id=c.s_id and c.p_id=d.s_id and b.chargeback_status is null and b.o_id="+oId;
-		List<Record> recordList = Db.find(sql);
-		if(recordList.size()>0){
-			boolean flag = false;
-			try {
-				flag = orderService.confirmSend(recordList, sId, oId);
-			}catch (Exception ex){}
-			if(flag){
-				renderSuccess();
-			}else{
-				addOpLog("confirmSend ===> oId="+oId);
-				renderFailed();
-			}
+		try {
+			Db.update("update t_order_basic set order_status=3,last_time=now() where o_id="+oId);
+			renderSuccess();
+		}catch (Exception ex){
+			addOpLog("confirmSend ===> oId="+oId);
 		}
 	}
 
@@ -409,37 +397,34 @@ public class OrderController extends BaseController {
 	public void applyForRefundDetail(){
 		Integer id = getParaToInt("id");
 		OrderDetail orderDetail = OrderDetail.dao.findById(id);
-		if(orderDetail.getIsSend()==2){
-			renderSuccess("1");
-		}else{
-			orderDetail.setChargebackStatus(1);
-			orderDetail.update();
-			//发送订阅消息
-			Map<String, Object> idMap = new HashMap<String, Object>();
-			idMap.put("value", orderDetail.getOId());
-			Map<String, Object> amountMap = new HashMap<String, Object>();
-			amountMap.put("value", orderDetail.getPaymentPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
-			Map<String, Object> phraseMap = new HashMap<String, Object>();
-			phraseMap.put("value", "退款申请");
-			Map<String, Object> timeMap = new HashMap<String, Object>();
-			try {
-				timeMap.put("value", DateUtil.getDayToString(new Date()));
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
-			dataDTO.setTime2(timeMap);
-			dataDTO.setAmount3(amountMap);
-			dataDTO.setPhrase4(phraseMap);
-			dataDTO.setCharacter_string1(idMap);
-			List<Record> recordList = Db.find("select a.s_phone from t_supplier_setting a,t_commodity_info b,t_order_detail c where c.s_id=b.s_id and b.p_id=a.s_id and c.s_id=" + orderDetail.getSId());
-			if(recordList.size()>0){
-				//new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
-				//发送短信
-				PhoneVerificationCode.sendMini(recordList.get(0).getStr("s_phone"), orderDetail.getOId().toString(), 2);
-			}
-			renderSuccess();
+		orderDetail.setChargebackStatus(1);
+		orderDetail.update();
+		//发送订阅消息
+		Map<String, Object> idMap = new HashMap<String, Object>();
+		idMap.put("value", orderDetail.getOId());
+		Map<String, Object> amountMap = new HashMap<String, Object>();
+		amountMap.put("value", orderDetail.getPaymentPrice().setScale(2, BigDecimal.ROUND_HALF_UP));
+		Map<String, Object> phraseMap = new HashMap<String, Object>();
+		phraseMap.put("value", "退款申请");
+		Map<String, Object> timeMap = new HashMap<String, Object>();
+		try {
+			timeMap.put("value", DateUtil.getDayToString(new Date()));
+		} catch (ParseException e) {
+			e.printStackTrace();
 		}
+		MiniTempDataDTO dataDTO = new MiniTempDataDTO();
+		dataDTO.setTime2(timeMap);
+		dataDTO.setAmount3(amountMap);
+		dataDTO.setPhrase4(phraseMap);
+		dataDTO.setCharacter_string1(idMap);
+		List<Record> recordList = Db.find("select a.s_phone from t_supplier_setting a,t_commodity_info b,t_order_detail c where c.s_id=b.s_id and b.p_id=a.s_id and c.s_id=" + orderDetail.getSId());
+		if(recordList.size()>0){
+			//new SubscribeMessage(orderDetail.getOId(), dataDTO,MiniUtil.REFUND_TEMP,2,recordList.get(0).getStr("s_openid")).start();
+			//发送短信
+			PhoneVerificationCode.sendMini(recordList.get(0).getStr("s_phone"), orderDetail.getOId().toString(), 2);
+		}
+		renderSuccess();
+
 	}
 
 
@@ -457,15 +442,9 @@ public class OrderController extends BaseController {
 		try{
 			StringBuffer sb = new StringBuffer();
 			sb.append(" select DISTINCT a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address,max(b.chargeback_status) as chargeback_status ");
-			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
-			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id ");
-			sb.append(" and a.order_status not in (4,6) ");
-			if(status==1){
-				sb.append(" and ((b.is_send=1 and b.chargeback_status is null) or b.chargeback_status in (1,4,5))  ");
-			}else{
-				sb.append(" and b.is_send=2 ");
-			}
-			sb.append(" and d.s_id="+sId);
+			sb.append(" from t_order_basic a,t_order_detail b ");
+			sb.append(" where a.o_id=b.o_id and a.s_id= "+sId);
+			sb.append(" and a.order_status ="+status);
 			sb.append(" group by a.o_id order by a.order_time ASC ");
 			List<Record> records = Db.find(sb.toString());
 			renderSuccess("",records);
@@ -627,8 +606,8 @@ public class OrderController extends BaseController {
 		try{
 			String select = " select sum(b.payment_price) totalPrice,a.payment_status,CASE  when a.order_status=4 then '已取消' else '已送达' END AS STATUS,a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') orderTime,a.consignee_name ";
 			StringBuffer sb = new StringBuffer();
-			sb.append(" from t_order_basic a ,t_order_detail b,t_commodity_info c,t_supplier_setting d ");
-			sb.append(" where (b.is_send=3 or a.order_status=4) and a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and d.s_id="+sId);
+			sb.append(" from t_order_basic a ,t_order_detail b ");
+			sb.append(" where a.o_id=b.o_id and a.order_status in (2,3,4) and a.s_id="+sId);
 			if(!"".equals(startDate) && !"".equals(endDate)){
 				sb.append(" and a.order_time>='"+startDate+"' and a.order_time<='"+endDate+"'");
 			}

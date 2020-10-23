@@ -54,15 +54,6 @@ public abstract class BaseOrderDetail<M extends BaseOrderDetail<M>> extends Mode
 		return getInt("order_num");
 	}
 
-	public M setIsSend(java.lang.Integer isSend) {
-		set("is_send", isSend);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getIsSend() {
-		return getInt("is_send");
-	}
-
 	public M setChargebackStatus(java.lang.Integer chargebackStatus) {
 		set("chargeback_status", chargebackStatus);
 		return (M)this;

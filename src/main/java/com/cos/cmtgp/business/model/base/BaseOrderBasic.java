@@ -18,6 +18,15 @@ public abstract class BaseOrderBasic<M extends BaseOrderBasic<M>> extends Model<
 		return getInt("o_id");
 	}
 
+	public M setSId(java.lang.Integer sId) {
+		set("s_id", sId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSId() {
+		return getInt("s_id");
+	}
+
 	public M setUId(java.lang.Integer uId) {
 		set("u_id", uId);
 		return (M)this;
@@ -99,13 +108,13 @@ public abstract class BaseOrderBasic<M extends BaseOrderBasic<M>> extends Model<
 		return getInt("payment_channel");
 	}
 
-	public M setPostCost(java.lang.Integer postCost) {
+	public M setPostCost(java.math.BigDecimal postCost) {
 		set("post_cost", postCost);
 		return (M)this;
 	}
 	
-	public java.lang.Integer getPostCost() {
-		return getInt("post_cost");
+	public java.math.BigDecimal getPostCost() {
+		return get("post_cost");
 	}
 
 	public M setOutTradeNo(java.lang.String outTradeNo) {

@@ -164,12 +164,12 @@ public class UserController extends BaseController {
 			AddressInfo addressInfo = AddressInfo.dao.findById(aId);
 			String areaFlag = "0,1,2,3";//0:即时配送，1：北京，2：京津冀，3: 无限制
 			if(addressInfo.getIsUsed()==1){
-				if(!addressInfo.getACity().contains("北京") && !addressInfo.getACity().contains("天津") && !addressInfo.getACity().contains("河北")){
+				if(!addressInfo.getCode().startsWith("11") && !addressInfo.getCode().startsWith("12") && !addressInfo.getCode().startsWith("13")){
 					areaFlag = "3";
 				}else{
-					if(addressInfo.getACity().contains("北京") && Integer.valueOf(addressInfo.getDistance())>3000){
+					if(addressInfo.getCode().startsWith("11") && Integer.valueOf(addressInfo.getDistance())>4000){
 						areaFlag = "1,2,3";
-					}else if(Integer.valueOf(addressInfo.getDistance())<=3000){
+					}else if(Integer.valueOf(addressInfo.getDistance())<=4000){
 						areaFlag = "0,1,2,3";
 					}else{
 						areaFlag = "2,3";
@@ -196,10 +196,10 @@ public class UserController extends BaseController {
 			String areaFlag = "0,1,2,3";//0:即时配送，1：北京，2：京津冀，3: 全国
 			if(address.getIsUsed()==1){
 				Db.update("update t_address_info set is_used=0 where u_id="+address.getUId());
-				if(!address.getACity().contains("北京") && !address.getACity().contains("天津") && !address.getACity().contains("河北")){
+				if(!address.getCode().startsWith("11") && !address.getCode().startsWith("12") && !address.getCode().startsWith("13")){
 					areaFlag = "3";
 				}else{
-					if(address.getACity().contains("北京") && Integer.valueOf(address.getDistance())>4000){
+					if(address.getCode().startsWith("11") && Integer.valueOf(address.getDistance())>4000){
 						areaFlag = "1,2,3";
 					}else if(Integer.valueOf(address.getDistance())<=4000){
 						areaFlag = "0,1,2,3";

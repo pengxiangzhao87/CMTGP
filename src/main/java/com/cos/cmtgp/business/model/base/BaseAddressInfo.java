@@ -45,6 +45,15 @@ public abstract class BaseAddressInfo<M extends BaseAddressInfo<M>> extends Mode
 		return getStr("phone");
 	}
 
+	public M setCode(java.lang.String code) {
+		set("code", code);
+		return (M)this;
+	}
+	
+	public java.lang.String getCode() {
+		return getStr("code");
+	}
+
 	public M setACity(java.lang.String aCity) {
 		set("a_city", aCity);
 		return (M)this;

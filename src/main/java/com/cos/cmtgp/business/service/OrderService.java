@@ -120,6 +120,7 @@ public class OrderService {
 				.set("u_id",orderDTO.getuId())
 				.set("order_time",now)
 				.set("total_price",orderDTO.getTotalPrice())
+				.set("post_cost",orderDTO.getPostCost())
 				.set("consignee_range_time",orderDTO.getRangeTime())
 				.set("consignee_name",orderDTO.getName())
 				.set("consignee_phone",orderDTO.getPhone())
@@ -137,7 +138,6 @@ public class OrderService {
 						.set("o_id",basic.getOId())
 						.set("payment_price",re.getPaymentPrice())
 						.set("order_num",re.getOrderNum())
-						.set("is_send",1)
                 		.set("is_extra",0);
                 detailList.add(detail);
                 ids+=re.getsId()+",";
@@ -164,30 +164,6 @@ public class OrderService {
 	@Before(Tx.class)
 	public boolean  sendOrder(Integer oId,Record record){
 		if(Db.update("update t_order_detail set is_send=2 where id in ("+record.getStr("ids")+")")>0){
-			//发送订阅
-//			Map<String, Object> one = new HashMap<String, Object>();
-//			one.put("value", oId);
-//
-//			Map<String, Object> two = new HashMap<String, Object>();
-//			two.put("value", "￥" + record.get("total_price"));
-//
-//			Map<String, Object> three = new HashMap<String, Object>();
-//			three.put("value", record.get("consignee_name"));
-//
-//			Map<String, Object> four = new HashMap<String, Object>();
-//			four.put("value", record.get("consignee_phone"));
-//
-//			Map<String, Object> five = new HashMap<String, Object>();
-//			five.put("value", "商品配送中，注意查收");
-//
-//			MiniTempDataDTO dataDTO = new MiniTempDataDTO();
-//			dataDTO.setCharacter_string6(one);
-//			dataDTO.setAmount12(two);
-//			dataDTO.setName2(three);
-//			dataDTO.setPhone_number3(four);
-//			dataDTO.setThing5(five);
-//			List<Record> recordList = Db.find("select b.u_openid from t_order_basic a,t_user_setting b where a.u_id=b.u_id and a.o_id="+oId);
-//			new SubscribeMessage(oId, dataDTO,MiniUtil.SEND_TEMP,3,recordList.get(0).getStr("u_openid")).start();
 			if(record.getInt("sum").intValue()==record.getInt("finish").intValue()){
 				if(Db.update("update t_order_basic set order_status=2 where o_id="+oId)>0){
 					return true;
@@ -199,31 +175,7 @@ public class OrderService {
 		return false;
 	}
 
-	/**
-	 * 商家确认已送达
-	 */
-	@Before(Tx.class)
-	public boolean confirmSend(List<Record> recordList,Integer sId,Integer oId){
-		String ids= "";
-		boolean flag = true;
-		for(Record record : recordList){
-			if(record.getInt("s_id").equals(sId)){
-				ids += record.getStr("id")+",";
-			}else{
-				flag = record.getInt("is_send")==3;
-			}
-		}
-		if(Db.update("update t_order_detail set is_send=3 where id in ("+ids.substring(0,ids.length()-1)+")")>0){
-			if(flag){
-				if(Db.update("update t_order_basic set order_status=3,last_time=now() where o_id="+oId)>0){
-					return true;
-				}
-			}else{
-				return true;
-			}
-		}
-		return false;
-	}
+
 
 	/**
 	 * APP

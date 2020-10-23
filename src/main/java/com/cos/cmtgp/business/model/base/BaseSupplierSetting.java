@@ -126,4 +126,85 @@ public abstract class BaseSupplierSetting<M extends BaseSupplierSetting<M>> exte
 		return getStr("longitude");
 	}
 
+	public M setShortStart(java.math.BigDecimal shortStart) {
+		set("short_start", shortStart);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getShortStart() {
+		return get("short_start");
+	}
+
+	public M setShortDeal(java.math.BigDecimal shortDeal) {
+		set("short_deal", shortDeal);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getShortDeal() {
+		return get("short_deal");
+	}
+
+	public M setShortFree(java.math.BigDecimal shortFree) {
+		set("short_free", shortFree);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getShortFree() {
+		return get("short_free");
+	}
+
+	public M setCityStart(java.math.BigDecimal cityStart) {
+		set("city_start", cityStart);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getCityStart() {
+		return get("city_start");
+	}
+
+	public M setCityDeal(java.math.BigDecimal cityDeal) {
+		set("city_deal", cityDeal);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getCityDeal() {
+		return get("city_deal");
+	}
+
+	public M setCityFree(java.math.BigDecimal cityFree) {
+		set("city_free", cityFree);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getCityFree() {
+		return get("city_free");
+	}
+
+	public M setLongStart(java.math.BigDecimal longStart) {
+		set("long_start", longStart);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getLongStart() {
+		return get("long_start");
+	}
+
+	public M setLongDeal(java.math.BigDecimal longDeal) {
+		set("long_deal", longDeal);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getLongDeal() {
+		return get("long_deal");
+	}
+
+	public M setLongFree(java.math.BigDecimal longFree) {
+		set("long_free", longFree);
+		return (M)this;
+	}
+	
+	public java.math.BigDecimal getLongFree() {
+		return get("long_free");
+	}
+
 }
