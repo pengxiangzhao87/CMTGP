@@ -629,7 +629,7 @@ public class MiniController extends BaseController {
      */
     private void updateOrderClose(Integer oId,Integer id){
         //查询没有退单完成的
-        List<Record> recordList = Db.find("select count(1) as totalSum,sum(case is_send when 1 then 0 else 1 end) as arriveSum from t_order_detail where o_id = " + oId + " and (chargeback_status<>2 or chargeback_status is null) ");
+        List<Record> recordList = Db.find("select count(1) as totalSum,sum(case when chargeback_status in (1,2) then 0 else 1 end) as arriveSum  from t_order_detail where o_id="+oId);
         if(recordList.size()>0) {
             Record Record = recordList.get(0);
             Integer totalSum = Record.getInt("totalSum");

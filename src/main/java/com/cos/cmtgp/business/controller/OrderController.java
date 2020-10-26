@@ -65,32 +65,21 @@ public class OrderController extends BaseController {
 	 */
 	public void sendOrder(){
 		Integer oId = getParaToInt("oId");
-		Integer sId = getParaToInt("sId");
-		String sql = " select count(a.o_id) as sum,count(c.s_id) as finish,GROUP_CONCAT(case when c.s_id is null then null else a.id end) as ids,GROUP_CONCAT(a.chargeback_status) as refundStatus,d.total_price,d.consignee_name,d.consignee_phone " +
-				" from t_order_detail a " +
-				" inner join t_order_basic d on a.o_id=d.o_id " +
-				" left join t_commodity_info b on a.s_id=b.s_id " +
-				" left join t_supplier_setting c on b.p_id=c.s_id and c.s_id="+sId +
-				" where a.is_send=1 and a.chargeback_status is null and a.o_id="+oId;
-		List<Record> records = Db.find(sql);
-		Record record = records.get(0);
-		String refundStatus = record.getStr("refundStatus");
-		boolean flag = true;
-		if(refundStatus!=null && !"".equals(refundStatus)){
-			List<String> refundStatusList = Arrays.asList(refundStatus.split(","));
-			if(refundStatusList.contains("1")){
-				flag = false;
-
+		try{
+			List<Record> recordList = Db.find("select GROUP_CONCAT(b.chargeback_status) as status from t_order_basic a,t_order_detail b where a.o_id=b.o_id and a.o_id=" + oId);
+			boolean flag = true;
+			if(recordList.size()>0){
+				if(recordList.get(0).getStr("status").contains("1")){
+					flag = false;
+				}
 			}
-		}
-		if(flag){
-			try{
-				orderService.sendOrder(oId,record);
-			}catch(Exception ex){}
-			renderSuccess();
-		}else{
-			renderSuccess("1");
-		}
+			if(flag){
+				Db.update("update t_order_basic set order_status=2 where o_id="+oId);
+				renderSuccess();
+			}else{
+				renderSuccess("1");
+			}
+		}catch(Exception ex){}
 	}
 
 	/**
@@ -371,6 +360,42 @@ public class OrderController extends BaseController {
 		}
 	}
 
+	/**
+	 * APP
+	 * 物流明细
+	 */
+	public void getExpressInfo(){
+		String type = getPara("type");
+		String no = getPara("no");
+		try{
+			String json= "{\"code\":\"OK\",\"no\":\"780098068058\",\"type\":\"ZTO\",\"list\":[{\"content\":\"【石家庄市】 快件已在 【长安三部】 签收,签收人: 本人, 感谢使用中通快递,期待再次为您服务!\",\"time\":\"2018-03-09 11:59:26\"},{\"content\":\"【石家庄市】 快件已到达 【长安三部】（0311-85344265）,业务员 容晓光（13081105270） 正在第1次派件, 请保持电话畅通,并耐心等待\",\"time\":\"2018-03-09 09:03:10\"},{\"content\":\"【石家庄市】 快件离开 【石家庄】 发往 【长安三部】\",\"time\":\"2018-03-08 23:43:44\"},{\"content\":\"【石家庄市】 快件到达 【石家庄】\",\"time\":\"2018-03-08 21:00:44\"},{\"content\":\"【广州市】 快件离开 【广州中心】 发往 【石家庄】\",\"time\":\"2018-03-07 01:38:45\"},{\"content\":\"【广州市】 快件到达 【广州中心】\",\"time\":\"2018-03-07 01:36:53\"},{\"content\":\"【广州市】 快件离开 【广州花都】 发往 【石家庄中转】\",\"time\":\"2018-03-07 00:40:57\"},{\"content\":\"【广州市】 【广州花都】（020-37738523） 的 马溪 （18998345739） 已揽收\",\"time\":\"2018-03-07 00:01:55\"}],\"state\":\"3\",\"msg\":\"查询成功\",\"name\":\"中通快递\",\"site\":\"www.zto.com\",\"phone\":\"95311\",\"logo\":\"https://img3.fegine.com/express/zto.jpg\",\"courier\":\"容晓光\",\"courierPhone\":\"13081105270\",\"updateTime\":\"2019-10-12 15:26:26\",\"takeTime\":\"5天23小时12分\"}";
+			Map<String, Object> result = FastJson.getJson().parse(json, Map.class);
+			if(result.get("code").equals("OK")){
+				List<Map<String,Object>> resultList =FastJson.getJson().parse(result.get("list").toString(), List.class);
+				Collections.sort(resultList, new Comparator<Map<String, Object>>() {
+					public int compare(Map<String, Object> a, Map<String, Object> b) {
+						Date dateA = null;
+						Date dateB = null;
+						try {
+							dateA = DateUtil.getStringToDate(a.get("time").toString());
+							dateB =  DateUtil.getStringToDate(b.get("time").toString());
+						} catch (ParseException e) {
+							e.printStackTrace();
+						}
+
+						return dateB.compareTo(dateA);
+					}
+				});
+				renderSuccess("",resultList);
+			}
+//			renderSuccess("",UrlUtil.getExpressInfo(type,no));
+		}catch(Exception ex){
+			addOpLog("queryOrderDetail ===> type="+type+",no="+no);
+			ex.printStackTrace();
+			renderFailed();
+		}
+	}
+
 
 	/**
 	 * APP
@@ -441,11 +466,14 @@ public class OrderController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
-			sb.append(" select DISTINCT a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address,max(b.chargeback_status) as chargeback_status ");
+			sb.append(" select a.o_id,a.consignee_name,a.consignee_range_time,a.consignee_phone,a.consignee_address, find_in_set('1',GROUP_CONCAT(b.chargeback_status)) as backStatus ");
 			sb.append(" from t_order_basic a,t_order_detail b ");
 			sb.append(" where a.o_id=b.o_id and a.s_id= "+sId);
 			sb.append(" and a.order_status ="+status);
-			sb.append(" group by a.o_id order by a.order_time ASC ");
+			if(status==1){
+				sb.append(" or (a.order_status in (1,3) and b.chargeback_status=1)");
+			}
+			sb.append(" order by a.order_time ASC ");
 			List<Record> records = Db.find(sb.toString());
 			renderSuccess("",records);
 		}catch(Exception ex){
@@ -465,7 +493,7 @@ public class OrderController extends BaseController {
 		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
-			sb.append(" select a.order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
+			sb.append(" select a.is_express,a.order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
 			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status ");
 			sb.append("  ,case a.extra_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '待补差价' end as payText " +
 					" ,case a.back_price_status when 1 then '申请退款中' when 2 then '已退款' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText " +

@@ -1,6 +1,10 @@
 package com.cos.cmtgp.common.util;
 
+import com.cos.cmtgp.business.model.CommodityInfo;
+import com.cos.cmtgp.common.mini.WXPayUtil;
+import com.jfinal.json.FastJson;
 import com.jfinal.kit.PropKit;
+import com.jfinal.plugin.activerecord.Record;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
@@ -27,9 +31,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.*;
+import java.text.ParseException;
+import java.util.*;
 
 public class UrlUtil {
 
@@ -130,5 +138,65 @@ public class UrlUtil {
 		HttpEntity entity = response.getEntity();
 		String result = EntityUtils.toString(entity, "UTF-8");
 		return result;
+	}
+
+
+
+	public static List<Map<String,Object>>  getExpressInfo(String type, String no) {
+		String host = "https://goexpress.market.alicloudapi.com";// 【1】请求地址 支持http 和 https 及 WEBSOCKET
+		String path = "/goexpress";// 【2】后缀
+		String appcode = "7e31044ce4f548caa3a80951c02f9e49"; // 【3】开通服务后 买家中心-查看AppCode
+//		String no = "780098068058"; // 【4】请求参数，详见文档描述
+//		String type = "zto"; //  【4】请求参数，不知道可不填 95%能自动识别
+		String urlSend = host + path + "?no=" + no + "&type=" + type; // 【5】拼接请求链接
+		try {
+			URL url = new URL(urlSend);
+			HttpURLConnection httpURLCon = (HttpURLConnection) url.openConnection();
+			httpURLCon.setRequestProperty("Authorization", "APPCODE " + appcode);// 格式Authorization:APPCODE
+			// (中间是英文空格)
+			int httpCode = httpURLCon.getResponseCode();
+			if (httpCode == 200) {
+				String json = read(httpURLCon.getInputStream());
+				Map<String, String> result = FastJson.getJson().parse(json, Map.class);
+				if(result.get("code").equals("OK")){
+					List<Map<String,Object>>  resultList =FastJson.getJson().parse(result.get("list").toString(), List.class);
+					Collections.sort(resultList, new Comparator<Map<String, Object>>() {
+						public int compare(Map<String, Object> a, Map<String, Object> b) {
+							Date dateA = null;
+							Date dateB = null;
+							try {
+								dateA = DateUtil.getStringToDate(a.get("time").toString());
+								dateB =  DateUtil.getStringToDate(b.get("time").toString());
+							} catch (ParseException e) {
+								e.printStackTrace();
+							}
+
+							return dateB.compareTo(dateA);
+						}
+					});
+					return resultList;
+				}
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+
+	}
+
+	/*
+	 * 读取返回结果
+	 */
+	private static String read(InputStream is) throws IOException {
+		StringBuffer sb = new StringBuffer();
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			line = new String(line.getBytes(), "utf-8");
+			sb.append(line);
+		}
+		br.close();
+		return sb.toString();
 	}
 }

@@ -17,7 +17,7 @@ public class OrderDTO {
     private String address;
     private Integer status;
     private Integer channel;
-    private Integer postCost;
+    private BigDecimal postCost;
     private String rangeTime;
     private String token;
     private List<DetailDTO> details;
@@ -78,11 +78,11 @@ public class OrderDTO {
         this.channel = channel;
     }
 
-    public Integer getPostCost() {
+    public BigDecimal getPostCost() {
         return postCost;
     }
 
-    public void setPostCost(Integer postCost) {
+    public void setPostCost(BigDecimal postCost) {
         this.postCost = postCost;
     }
 
