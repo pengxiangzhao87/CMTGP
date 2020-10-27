@@ -135,6 +135,42 @@ public abstract class BaseOrderBasic<M extends BaseOrderBasic<M>> extends Model<
 		return getStr("transaction_id");
 	}
 
+	public M setBackPriceStatus(java.lang.Integer backPriceStatus) {
+		set("back_price_status", backPriceStatus);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getBackPriceStatus() {
+		return getInt("back_price_status");
+	}
+
+	public M setIsExpress(java.lang.Integer isExpress) {
+		set("is_express", isExpress);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getIsExpress() {
+		return getInt("is_express");
+	}
+
+	public M setExpressType(java.lang.String expressType) {
+		set("express_type", expressType);
+		return (M)this;
+	}
+	
+	public java.lang.String getExpressType() {
+		return getStr("express_type");
+	}
+
+	public M setExpressNo(java.lang.String expressNo) {
+		set("express_no", expressNo);
+		return (M)this;
+	}
+	
+	public java.lang.String getExpressNo() {
+		return getStr("express_no");
+	}
+
 	public M setOrderStatus(java.lang.Integer orderStatus) {
 		set("order_status", orderStatus);
 		return (M)this;
@@ -214,15 +250,6 @@ public abstract class BaseOrderBasic<M extends BaseOrderBasic<M>> extends Model<
 	
 	public java.math.BigDecimal getTotalBackPrice() {
 		return get("total_back_price");
-	}
-
-	public M setBackPriceStatus(java.lang.Integer backPriceStatus) {
-		set("back_price_status", backPriceStatus);
-		return (M)this;
-	}
-	
-	public java.lang.Integer getBackPriceStatus() {
-		return getInt("back_price_status");
 	}
 
 	public M setBackRefundId(java.lang.String backRefundId) {

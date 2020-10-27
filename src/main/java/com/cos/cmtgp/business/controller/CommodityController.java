@@ -116,7 +116,8 @@ public class CommodityController extends BaseController {
 					file.delete();
 				}
 			}
-			commodityInfo.delete();
+			commodityInfo.setDr(1);
+			commodityInfo.update();
 		}
 		renderSuccess();
 	}

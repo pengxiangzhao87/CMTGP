@@ -20,6 +20,7 @@ public class _MappingKit {
 		arp.addMapping("t_commodity_info", "s_id", CommodityInfo.class);
 		arp.addMapping("t_commodity_type_setting", "t_id", CommodityTypeSetting.class);
 		arp.addMapping("t_customer_service", "id", CustomerService.class);
+		arp.addMapping("t_express_info", "id", ExpressInfo.class);
 		arp.addMapping("t_feedback_info", "id", FeedbackInfo.class);
 		arp.addMapping("t_global_conf", "c_id", GlobalConf.class);
 		arp.addMapping("t_hotissue_basic", "h_id", HotissueBasic.class);

@@ -7,6 +7,7 @@ import java.util.*;
 import cn.hutool.core.util.ArrayUtil;
 import com.cos.cmtgp.business.dto.MiniTempDataDTO;
 import com.cos.cmtgp.business.dto.OrderDTO;
+import com.cos.cmtgp.business.model.ExpressInfo;
 import com.cos.cmtgp.business.model.GlobalConf;
 import com.cos.cmtgp.business.model.OrderBasic;
 import com.cos.cmtgp.business.model.OrderDetail;
@@ -367,28 +368,74 @@ public class OrderController extends BaseController {
 	public void getExpressInfo(){
 		String type = getPara("type");
 		String no = getPara("no");
+		Integer oId = getParaToInt("oId");
+		Integer express = getParaToInt("express");
 		try{
-			String json= "{\"code\":\"OK\",\"no\":\"780098068058\",\"type\":\"ZTO\",\"list\":[{\"content\":\"【石家庄市】 快件已在 【长安三部】 签收,签收人: 本人, 感谢使用中通快递,期待再次为您服务!\",\"time\":\"2018-03-09 11:59:26\"},{\"content\":\"【石家庄市】 快件已到达 【长安三部】（0311-85344265）,业务员 容晓光（13081105270） 正在第1次派件, 请保持电话畅通,并耐心等待\",\"time\":\"2018-03-09 09:03:10\"},{\"content\":\"【石家庄市】 快件离开 【石家庄】 发往 【长安三部】\",\"time\":\"2018-03-08 23:43:44\"},{\"content\":\"【石家庄市】 快件到达 【石家庄】\",\"time\":\"2018-03-08 21:00:44\"},{\"content\":\"【广州市】 快件离开 【广州中心】 发往 【石家庄】\",\"time\":\"2018-03-07 01:38:45\"},{\"content\":\"【广州市】 快件到达 【广州中心】\",\"time\":\"2018-03-07 01:36:53\"},{\"content\":\"【广州市】 快件离开 【广州花都】 发往 【石家庄中转】\",\"time\":\"2018-03-07 00:40:57\"},{\"content\":\"【广州市】 【广州花都】（020-37738523） 的 马溪 （18998345739） 已揽收\",\"time\":\"2018-03-07 00:01:55\"}],\"state\":\"3\",\"msg\":\"查询成功\",\"name\":\"中通快递\",\"site\":\"www.zto.com\",\"phone\":\"95311\",\"logo\":\"https://img3.fegine.com/express/zto.jpg\",\"courier\":\"容晓光\",\"courierPhone\":\"13081105270\",\"updateTime\":\"2019-10-12 15:26:26\",\"takeTime\":\"5天23小时12分\"}";
-			Map<String, Object> result = FastJson.getJson().parse(json, Map.class);
-			if(result.get("code").equals("OK")){
-				List<Map<String,Object>> resultList =FastJson.getJson().parse(result.get("list").toString(), List.class);
-				Collections.sort(resultList, new Comparator<Map<String, Object>>() {
-					public int compare(Map<String, Object> a, Map<String, Object> b) {
-						Date dateA = null;
-						Date dateB = null;
-						try {
-							dateA = DateUtil.getStringToDate(a.get("time").toString());
-							dateB =  DateUtil.getStringToDate(b.get("time").toString());
-						} catch (ParseException e) {
-							e.printStackTrace();
-						}
+			if(express==2){
+				List<Record> recordList = Db.find(" select * from t_express_info where o_id=" + oId);
+				renderSuccess("",recordList);
+			}else{
+				String json= "{\"code\":\"OK\",\"no\":\"780098068058\",\"type\":\"ZTO\",\"list\":[{\"content\":\"【石家庄市】 快件已在 【长安三部】 签收,签收人: 本人, 感谢使用中通快递,期待再次为您服务!\",\"time\":\"2018-03-09 11:59:26\"},{\"content\":\"【石家庄市】 快件已到达 【长安三部】（0311-85344265）,业务员 容晓光（13081105270） 正在第1次派件, 请保持电话畅通,并耐心等待\",\"time\":\"2018-03-09 09:03:10\"},{\"content\":\"【石家庄市】 快件离开 【石家庄】 发往 【长安三部】\",\"time\":\"2018-03-08 23:43:44\"},{\"content\":\"【石家庄市】 快件到达 【石家庄】\",\"time\":\"2018-03-08 21:00:44\"},{\"content\":\"【广州市】 快件离开 【广州中心】 发往 【石家庄】\",\"time\":\"2018-03-07 01:38:45\"},{\"content\":\"【广州市】 快件到达 【广州中心】\",\"time\":\"2018-03-07 01:36:53\"},{\"content\":\"【广州市】 快件离开 【广州花都】 发往 【石家庄中转】\",\"time\":\"2018-03-07 00:40:57\"},{\"content\":\"【广州市】 【广州花都】（020-37738523） 的 马溪 （18998345739） 已揽收\",\"time\":\"2018-03-07 00:01:55\"}],\"state\":\"3\",\"msg\":\"查询成功\",\"name\":\"中通快递\",\"site\":\"www.zto.com\",\"phone\":\"95311\",\"logo\":\"https://img3.fegine.com/express/zto.jpg\",\"courier\":\"容晓光\",\"courierPhone\":\"13081105270\",\"updateTime\":\"2019-10-12 15:26:26\",\"takeTime\":\"5天23小时12分\"}";
+				Map<String, Object> result = FastJson.getJson().parse(json, Map.class);
+				if(result.get("code").equals("OK")){
+					List<Map<String,Object>> resultList =FastJson.getJson().parse(result.get("list").toString(), List.class);
+					Collections.sort(resultList, new Comparator<Map<String, Object>>() {
+						public int compare(Map<String, Object> a, Map<String, Object> b) {
+							Date dateA = null;
+							Date dateB = null;
+							try {
+								dateA = DateUtil.getStringToDate(a.get("time").toString());
+								dateB =  DateUtil.getStringToDate(b.get("time").toString());
+							} catch (ParseException e) {
+								e.printStackTrace();
+							}
 
-						return dateB.compareTo(dateA);
+							return dateB.compareTo(dateA);
+						}
+					});
+					boolean flag = false;
+					for(Map<String,Object> map : resultList){
+						if(map.get("content").toString().contains("签收")){
+							flag = true;
+							break;
+						}
 					}
-				});
-				renderSuccess("",resultList);
+					if(flag){
+						Db.delete("delete from t_express_info where o_id="+oId);
+						List<ExpressInfo> expressInfoList = new ArrayList<ExpressInfo>();
+						for(Map<String,Object> map : resultList){
+							ExpressInfo expressInfo = new ExpressInfo();
+							expressInfo.setOId(oId);
+							expressInfo.setTime(DateUtil.getStringToDate(map.get("time").toString()));
+							expressInfo.setContent(map.get("content").toString());
+							expressInfoList.add(expressInfo);
+						}
+						Db.batchSave(expressInfoList,expressInfoList.size());
+					}
+					renderSuccess("",resultList);
+				}
+//				List<Map<String, Object>> resultList = UrlUtil.getExpressInfo(type, no);
+//				boolean flag = false;
+//				for(Map<String,Object> map : resultList){
+//					if(map.get("content").toString().contains("签收")){
+//						flag = true;
+//						break;
+//					}
+//				}
+//				if(flag){
+//					Db.delete("delete from t_express_info where o_id="+oId);
+//					List<ExpressInfo> expressInfoList = new ArrayList<ExpressInfo>();
+//					for(Map<String,Object> map : resultList){
+//						ExpressInfo expressInfo = new ExpressInfo();
+//						expressInfo.setOId(oId);
+//						expressInfo.setTime(DateUtil.getStringToDate(map.get("time").toString()));
+//						expressInfo.setContent(map.get("content").toString());
+//						expressInfoList.add(expressInfo);
+//					}
+//					Db.batchSave(expressInfoList,expressInfoList.size());
+//				}
+//				renderSuccess("",resultList);
 			}
-//			renderSuccess("",UrlUtil.getExpressInfo(type,no));
 		}catch(Exception ex){
 			addOpLog("queryOrderDetail ===> type="+type+",no="+no);
 			ex.printStackTrace();
@@ -490,11 +537,10 @@ public class OrderController extends BaseController {
 	 */
 	public void selectPenderDetail(){
 		Integer oId = getParaToInt("oId");
-		Integer sId = getParaToInt("sId");
 		try{
 			StringBuffer sb = new StringBuffer();
 			sb.append(" select a.is_express,a.order_status,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') as order_time,SUBSTRING_INDEX(c.s_address_img,'~',1) as coverUrl,a.total_back_price,a.extra_status,a.o_id,b.id,a.consignee_name,a.consignee_phone,a.consignee_range_time,a.consignee_address,b.extra_img_url,b.is_extra,b.extra_weight,b.extra_price ");
-			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status ");
+			sb.append(" ,a.back_price_status ,b.extra_back_status,b.extra_pay_status,CONCAT(c.s_name,' ￥',c.s_price,'/',c.s_unit) as sName,case c.init_unit when 1 then concat(b.order_num,'个') else concat(b.order_num,'g') end as num,b.payment_price,b.chargeback_status,a.post_cost,a.express_type,a.express_no ");
 			sb.append("  ,case a.extra_status when 1 then '已支付' when 2 then '未支付' when 3 then '支付中' when 4 then '转入退款' when 5 then '支付失败' else '待补差价' end as payText " +
 					" ,case a.back_price_status when 1 then '申请退款中' when 2 then '已退款' when 3 then '退款处理中' when 4 then '退款异常' else '待返还' end as backText " +
 					" ,case b.chargeback_status when 1 then '待退款' when 2 then '已退款' when 3 then '退款中' when 4 then '退款异常' when 5 then '退款关闭' else '' end as refundBack ");
@@ -502,7 +548,7 @@ public class OrderController extends BaseController {
 			sb.append(" ,DATE_FORMAT(a.last_time,'%Y-%m-%d %T') as last_time,a.extra_payment,a.extra_time,extra_pay_back_status,a.total_price ");
 			sb.append(" ,case a.order_status when 1 then '待发货' when 2 then '待收货' when 3 then '已送达' when 4 then '已关闭' else '已取消' end as orderStatus ");
 			sb.append(" from t_order_basic a,t_order_detail b,t_commodity_info c,t_supplier_setting d  ");
-			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id="+oId +" and d.s_id="+sId);
+			sb.append(" where a.o_id=b.o_id and b.s_id=c.s_id and c.p_id=d.s_id and a.o_id="+oId);
 			List<Record> records = Db.find(sb.toString());
 			if(records.size()>0){
 				renderSuccess("",records);
@@ -510,7 +556,7 @@ public class OrderController extends BaseController {
 				renderFailed();
 			}
 		}catch(Exception ex){
-			addOpLog("selectPenderDetail ===> oId="+oId+",sId="+sId);
+			addOpLog("selectPenderDetail ===> oId="+oId);
 			ex.printStackTrace();
 
 		}
@@ -624,29 +670,38 @@ public class OrderController extends BaseController {
 	 * 商户查询：待收货、已送达、已关闭的订单
 	 */
 	public void getOrderBySupplier(){
-		String sId = getPara("sId");
+		Integer sId = getParaToInt("sId");
 		String startDate = getPara("startDate");
 		String endDate = getPara("endDate");
-		String sName = getPara("sName");
+		String name = getPara("name");
+		String phone = getPara("phone");
+		Integer oId = getParaToInt("oId");
 		Integer pageNo = getParaToInt("pageNo");
 		Integer pageSize = getParaToInt("pageSize");
 
 		try{
-			String select = " select sum(b.payment_price) totalPrice,a.payment_status,CASE  when a.order_status=4 then '已取消' else '已送达' END AS STATUS,a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d %T') orderTime,a.consignee_name ";
+			String select = " select CASE a.order_status when 2 then '待收货' when 3 then '已送达' else '已关闭' END AS STATUS," +
+					"a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d') orderTime,a.consignee_name,a.consignee_phone ";
 			StringBuffer sb = new StringBuffer();
-			sb.append(" from t_order_basic a ,t_order_detail b ");
-			sb.append(" where a.o_id=b.o_id and a.order_status in (2,3,4) and a.s_id="+sId);
+			sb.append(" from t_order_basic a ");
+			sb.append(" where a.s_id="+sId);
 			if(!"".equals(startDate) && !"".equals(endDate)){
 				sb.append(" and a.order_time>='"+startDate+"' and a.order_time<='"+endDate+"'");
 			}
-			if(!"".equals(sName) && sName!=null){
-				sb.append(" and c.s_name like '%"+sName+"%'");
+			if(!"".equals(name) && name!=null){
+				sb.append(" and a.consignee_name like '%"+name+"%'");
 			}
-			sb.append(" group by a.o_id order by a.order_time desc ");
+			if(!"".equals(phone) && phone!=null){
+				sb.append(" and a.consignee_phone = '"+phone+"'");
+			}
+			if(oId!=null){
+				sb.append(" and a.o_id ="+oId);
+			}
+			sb.append(" order by a.order_time desc ");
 			Page<Record> paginate = Db.paginate(pageNo, pageSize, select, sb.toString());
 			renderSuccess("",paginate);
 		}catch(Exception ex){
-			addOpLog("getOrderBySupplier ===>sId="+sId+",startDate="+startDate+",endDate="+endDate+",sName="+sName+",pageNo="+pageNo+",pageSize="+pageSize);
+			addOpLog("getOrderBySupplier ===>sId="+sId+",startDate="+startDate+",endDate="+endDate+",name="+name+",pageNo="+pageNo+",pageSize="+pageSize);
 			ex.printStackTrace();
 			renderFailed();
 		}

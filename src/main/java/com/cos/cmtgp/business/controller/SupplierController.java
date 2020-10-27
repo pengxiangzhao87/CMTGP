@@ -2,6 +2,7 @@ package com.cos.cmtgp.business.controller;
 
 
 import com.alibaba.fastjson.JSON;
+import com.cos.cmtgp.business.model.CommodityInfo;
 import com.cos.cmtgp.business.model.GlobalConf;
 import com.cos.cmtgp.business.model.SupplierSetting;
 import com.cos.cmtgp.business.service.SupplierService;
@@ -30,10 +31,10 @@ public class SupplierController extends BaseController {
 		renderSuccess("",byId);
 	}
 
-	public void bindPhone(){
-		String phone = getPara("phone");
-		Integer sId = getParaToInt("sId");
-		Db.update("update t_supplier_setting set s_phone='"+phone+"' where s_id="+sId);
+	public void uploadSupplier(){
+		String json = HttpKit.readData(getRequest());
+		SupplierSetting supplier = FastJson.getJson().parse(json,SupplierSetting.class);
+		supplier.update();
 		renderSuccess();
 	}
 
