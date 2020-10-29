@@ -25,6 +25,11 @@ import java.util.Map;
 public class SupplierController extends BaseController {
 	SupplierService supplierService = enhance(SupplierService.class);
 
+	public void querySupplier(){
+		List<SupplierSetting> settingList = SupplierSetting.dao.find("select s_id,s_corporate_name,bg_img from t_supplier_setting");
+		renderSuccess("",settingList);
+	}
+
 	public void getSupplier(){
 		Integer tId = getParaToInt("tId");
 		SupplierSetting byId = SupplierSetting.dao.findById(tId);

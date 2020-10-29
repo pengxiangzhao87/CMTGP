@@ -136,7 +136,7 @@ public class CommodityController extends BaseController {
 
 	/**
 	 * 商户APP
-	 * 新增
+	 * 修改
 	 */
 	public void updateGoods(){
 		String json = HttpKit.readData(getRequest());

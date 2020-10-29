@@ -374,7 +374,7 @@ public class OrderController extends BaseController {
 			if(express==2){
 				List<Record> recordList = Db.find(" select * from t_express_info where o_id=" + oId);
 				renderSuccess("",recordList);
-			}else{
+			}else if(express==0){
 				String json= "{\"code\":\"OK\",\"no\":\"780098068058\",\"type\":\"ZTO\",\"list\":[{\"content\":\"【石家庄市】 快件已在 【长安三部】 签收,签收人: 本人, 感谢使用中通快递,期待再次为您服务!\",\"time\":\"2018-03-09 11:59:26\"},{\"content\":\"【石家庄市】 快件已到达 【长安三部】（0311-85344265）,业务员 容晓光（13081105270） 正在第1次派件, 请保持电话畅通,并耐心等待\",\"time\":\"2018-03-09 09:03:10\"},{\"content\":\"【石家庄市】 快件离开 【石家庄】 发往 【长安三部】\",\"time\":\"2018-03-08 23:43:44\"},{\"content\":\"【石家庄市】 快件到达 【石家庄】\",\"time\":\"2018-03-08 21:00:44\"},{\"content\":\"【广州市】 快件离开 【广州中心】 发往 【石家庄】\",\"time\":\"2018-03-07 01:38:45\"},{\"content\":\"【广州市】 快件到达 【广州中心】\",\"time\":\"2018-03-07 01:36:53\"},{\"content\":\"【广州市】 快件离开 【广州花都】 发往 【石家庄中转】\",\"time\":\"2018-03-07 00:40:57\"},{\"content\":\"【广州市】 【广州花都】（020-37738523） 的 马溪 （18998345739） 已揽收\",\"time\":\"2018-03-07 00:01:55\"}],\"state\":\"3\",\"msg\":\"查询成功\",\"name\":\"中通快递\",\"site\":\"www.zto.com\",\"phone\":\"95311\",\"logo\":\"https://img3.fegine.com/express/zto.jpg\",\"courier\":\"容晓光\",\"courierPhone\":\"13081105270\",\"updateTime\":\"2019-10-12 15:26:26\",\"takeTime\":\"5天23小时12分\"}";
 				Map<String, Object> result = FastJson.getJson().parse(json, Map.class);
 				if(result.get("code").equals("OK")){
@@ -411,6 +411,7 @@ public class OrderController extends BaseController {
 							expressInfoList.add(expressInfo);
 						}
 						Db.batchSave(expressInfoList,expressInfoList.size());
+						Db.update("update t_order_basic set is_express=2 where o_id="+oId);
 					}
 					renderSuccess("",resultList);
 				}
@@ -681,7 +682,7 @@ public class OrderController extends BaseController {
 
 		try{
 			String select = " select CASE a.order_status when 2 then '待收货' when 3 then '已送达' else '已关闭' END AS STATUS," +
-					"a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d') orderTime,a.consignee_name,a.consignee_phone ";
+					"a.o_id,DATE_FORMAT(a.order_time,'%Y-%m-%d') orderTime,a.consignee_name,a.consignee_phone,a.is_express,a.express_type,a.express_no ";
 			StringBuffer sb = new StringBuffer();
 			sb.append(" from t_order_basic a ");
 			sb.append(" where a.s_id="+sId);

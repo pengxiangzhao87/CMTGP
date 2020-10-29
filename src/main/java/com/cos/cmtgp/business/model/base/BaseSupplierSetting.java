@@ -36,6 +36,15 @@ public abstract class BaseSupplierSetting<M extends BaseSupplierSetting<M>> exte
 		return getStr("s_corporate_name");
 	}
 
+	public M setBgImg(java.lang.String bgImg) {
+		set("bg_img", bgImg);
+		return (M)this;
+	}
+	
+	public java.lang.String getBgImg() {
+		return getStr("bg_img");
+	}
+
 	public M setSContactsName(java.lang.String sContactsName) {
 		set("s_contacts_name", sContactsName);
 		return (M)this;
