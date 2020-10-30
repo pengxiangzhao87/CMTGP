@@ -14,8 +14,14 @@ import com.jfinal.plugin.activerecord.Record;
 
 public class CommodityService {
 
-	public List<CommodityTypeSetting> selectCategoryList(){
-		return CommodityTypeSetting.dao.find("select *from t_commodity_type_setting where t_off=0");
+	public List<CommodityTypeSetting> selectCategoryList(Integer sId){
+		String sql = "select * from t_commodity_type_setting where t_off=0 ";
+		if(sId==null){
+			sql +=" and is_popular=1";
+		}else{
+			sql += " and s_id="+sId;
+		}
+		return CommodityTypeSetting.dao.find(sql);
 	}
 
 	/**
@@ -29,7 +35,7 @@ public class CommodityService {
 		String select = " select a.s_id,a.s_name,SUBSTRING_INDEX(a.s_address_img,'~',1) as coverUrl,a.init_unit,a.init_num,a.price_unit," +
 			" a.s_price,a.original_price,a.is_active, " +
 			" concat('/',a.s_unit) as unit, " +
-			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag ";
+			" case when b.id is null then 0 else 1 end as isCar,c.s_corporate_name,count(d.id) as sales,a.state,find_in_set(a.delivery_area,'"+areaFlag+"') as areaFlag,c.bg_img ";
 		String from = " from t_commodity_info a " +
 					" inner join t_commodity_type_setting e on a.t_id=e.t_id  " +
 					" left join t_supplier_setting c on a.p_id=c.s_id" +

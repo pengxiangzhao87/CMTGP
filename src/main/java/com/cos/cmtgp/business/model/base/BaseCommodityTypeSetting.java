@@ -18,6 +18,15 @@ public abstract class BaseCommodityTypeSetting<M extends BaseCommodityTypeSettin
 		return getInt("t_id");
 	}
 
+	public M setSId(java.lang.Integer sId) {
+		set("s_id", sId);
+		return (M)this;
+	}
+	
+	public java.lang.Integer getSId() {
+		return getInt("s_id");
+	}
+
 	public M setTType(java.lang.Integer tType) {
 		set("t_type", tType);
 		return (M)this;
@@ -36,13 +45,13 @@ public abstract class BaseCommodityTypeSetting<M extends BaseCommodityTypeSettin
 		return getStr("t_name");
 	}
 
-	public M setPCode(java.lang.Long pCode) {
-		set("p_code", pCode);
+	public M setIsPopular(java.lang.Long isPopular) {
+		set("is_popular", isPopular);
 		return (M)this;
 	}
 	
-	public java.lang.Long getPCode() {
-		return getLong("p_code");
+	public java.lang.Long getIsPopular() {
+		return getLong("is_popular");
 	}
 
 	public M setTOff(java.lang.Integer tOff) {

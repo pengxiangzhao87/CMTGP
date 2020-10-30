@@ -30,8 +30,9 @@ public class CommodityController extends BaseController {
 	 * 查询所有类别
 	 */
 	public void queryCategoryList(){
+		Integer sId = getParaToInt("sId");
 		try{
-			renderSuccess("",commodityService.selectCategoryList());
+			renderSuccess("",commodityService.selectCategoryList(sId));
 		}catch(Exception ex){
 			addOpLog("queryCategoryList ===>");
 			ex.printStackTrace();
