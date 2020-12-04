@@ -17,22 +17,37 @@ public class _MappingKit {
 	
 	public static void mapping(ActiveRecordPlugin arp) {
 		arp.addMapping("t_address_info", "a_id", AddressInfo.class);
+		arp.addMapping("t_bill_info", "b_id", BillInfo.class);
+		arp.addMapping("t_cart_info", "c_id", CartInfo.class);
+		arp.addMapping("t_cart_menu", "c_id", CartMenu.class);
+		arp.addMapping("t_category1_info", "c_id", Category1Info.class);
+		arp.addMapping("t_category2_info", "c_id", Category2Info.class);
+		arp.addMapping("t_comment_info", "c_id", CommentInfo.class);
 		arp.addMapping("t_commodity_info", "s_id", CommodityInfo.class);
 		arp.addMapping("t_commodity_type_setting", "t_id", CommodityTypeSetting.class);
+		arp.addMapping("t_conf_coupon", "c_id", ConfCoupon.class);
+		arp.addMapping("t_conf_delivery", "d_id", ConfDelivery.class);
+		arp.addMapping("t_conf_search", "s_id", ConfSearch.class);
 		arp.addMapping("t_customer_service", "id", CustomerService.class);
 		arp.addMapping("t_express_info", "id", ExpressInfo.class);
 		arp.addMapping("t_feedback_info", "id", FeedbackInfo.class);
+		arp.addMapping("t_food_info", "f_id", FoodInfo.class);
 		arp.addMapping("t_global_conf", "c_id", GlobalConf.class);
 		arp.addMapping("t_hotissue_basic", "h_id", HotissueBasic.class);
 		arp.addMapping("t_hotissue_detail", "d_id", HotissueDetail.class);
 		arp.addMapping("t_hotissue_liked", "id", HotissueLiked.class);
 		arp.addMapping("t_hotissue_reply", "r_id", HotissueReply.class);
 		arp.addMapping("t_interface_info", "id", InterfaceInfo.class);
+		arp.addMapping("t_menu_info", "m_id", MenuInfo.class);
+		arp.addMapping("t_menu_option", "m_id", MenuOption.class);
+		arp.addMapping("t_menu_standard", "m_id", MenuStandard.class);
+		arp.addMapping("t_news_info", "n_id", NewsInfo.class);
 		arp.addMapping("t_order_basic", "o_id", OrderBasic.class);
 		arp.addMapping("t_order_detail", "id", OrderDetail.class);
 		arp.addMapping("t_shopping_info", "id", ShoppingInfo.class);
 		arp.addMapping("t_supplier_setting", "s_id", SupplierSetting.class);
 		arp.addMapping("t_sys_log", "id", SysLog.class);
+		arp.addMapping("t_user_coupon", "u_id", UserCoupon.class);
 		arp.addMapping("t_user_relation", "id", UserRelation.class);
 		arp.addMapping("t_user_setting", "u_id", UserSetting.class);
 		arp.addMapping("t_wx_cash_info", "id", WxCashInfo.class);

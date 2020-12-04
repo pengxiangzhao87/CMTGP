@@ -51,6 +51,7 @@ public class CmtgpConfig extends JFinalConfig {
 	public void configRoute(Routes me) {
         me.add("/commodity", CommodityController.class,"/cmtgp/commodity");
 		me.add("/community", CommunityController.class,"/cmtgp/community");
+		me.add("/menu", MenuController.class,"/cmtgp/menu");
 		me.add("/order", OrderController.class,"/cmtgp/order");
 		me.add("/shoppingCart", ShoppingCartController.class,"/cmtgp/shoppingcart");
 		me.add("/supplier", SupplierController.class,"/cmtgp/supplier");

@@ -37,6 +37,7 @@ public class LoginFilter implements Filter {
 				&& !currUrl.contains("/user")
 				&& !currUrl.contains("/upload")
 				&& !currUrl.contains("/mini")
+				&& !currUrl.contains("/menu")
 				&& !currUrl.startsWith(contextPath+"/interfaceProxy")) {
 
 			if(session.getAttribute("sysUser") == null) {
