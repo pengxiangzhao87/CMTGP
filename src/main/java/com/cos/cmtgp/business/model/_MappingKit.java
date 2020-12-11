@@ -22,6 +22,7 @@ public class _MappingKit {
 		arp.addMapping("t_cart_menu", "c_id", CartMenu.class);
 		arp.addMapping("t_category1_info", "c_id", Category1Info.class);
 		arp.addMapping("t_category2_info", "c_id", Category2Info.class);
+		arp.addMapping("t_collect_info", "c_id", CollectInfo.class);
 		arp.addMapping("t_comment_info", "c_id", CommentInfo.class);
 		arp.addMapping("t_commodity_info", "s_id", CommodityInfo.class);
 		arp.addMapping("t_commodity_type_setting", "t_id", CommodityTypeSetting.class);
@@ -40,7 +41,6 @@ public class _MappingKit {
 		arp.addMapping("t_interface_info", "id", InterfaceInfo.class);
 		arp.addMapping("t_menu_info", "m_id", MenuInfo.class);
 		arp.addMapping("t_menu_option", "m_id", MenuOption.class);
-		arp.addMapping("t_menu_standard", "m_id", MenuStandard.class);
 		arp.addMapping("t_news_info", "n_id", NewsInfo.class);
 		arp.addMapping("t_order_basic", "o_id", OrderBasic.class);
 		arp.addMapping("t_order_detail", "id", OrderDetail.class);
