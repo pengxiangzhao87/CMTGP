@@ -115,18 +115,15 @@ public class MenuController extends BaseController {
 
     public void queryFoodDetail(){
         Integer foodId = getParaToInt("foodId");
-        FoodInfo foodInfo = FoodInfo.dao.findById(foodId);
-        renderSuccess("",foodInfo);
-    }
-
-    public void goodAndMenu(){
-        Integer foodId = getParaToInt("foodId");
+        String sql = "select case a.f_type when 0 then a.f_init_number*a.f_price else a.f_init_number/50*a.f_price end as totalPrice,a.* from t_food_info a where a.f_id="+foodId;
+        Record foodInfo = Db.find(sql).get(0);
         StringBuffer sb = new StringBuffer("select a.m_id,a.m_name,SUBSTRING_INDEX(a.m_img_adr,'~',1) as m_img_adr,a.m_cook_time,a.m_cook_price ");
         sb.append(" from t_menu_info a ,t_menu_option b");
         sb.append(" where a.m_id=b.menu_id and b.food_id= "+foodId);
         sb.append(" limit 0,8 ");
-        List<Record> recordList = Db.find(sb.toString());
-        renderSuccess("",recordList);
+        List<Record> menuList = Db.find(sb.toString());
+        foodInfo.set("menuList",menuList);
+        renderSuccess("",foodInfo);
     }
 
 
