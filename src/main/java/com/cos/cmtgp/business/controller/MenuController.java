@@ -24,17 +24,25 @@ public class MenuController extends BaseController {
         Integer category1Id = getParaToInt("category1Id");
         Integer category2Id = getParaToInt("category2Id");
         String menuName = getPara("menuName");
+        Integer foodId = getParaToInt("foodId");
         try{
-            StringBuffer select = new StringBuffer(" select a.m_name,a.m_id,a.m_img_adr,a.m_cook_time,a.m_video_adr,a.m_cook_price,a.is_order ");
+            StringBuffer select = new StringBuffer(" select a.m_name,a.m_id,SUBSTRING_INDEX(a.m_img_adr,'~',1) as m_img_adr,a.m_cook_time,a.m_video_adr,a.m_cook_price,a.is_order ");
             StringBuffer from = new StringBuffer(" from t_menu_info a ");
+            if(foodId!=null){
+                from.append(",t_menu_option b ");
+            }
+            from.append(" where 1=1 ");
             if(StringUtil.isNotEmpty(menuName)){
-                from.append(" where a.m_name like '"+menuName+"' ");
+                from.append(" and a.m_name like '"+menuName+"' ");
             }
             if(category1Id!=null){
-                select.append(" and a.category1_id= "+category1Id);
+                from.append(" and a.category1_id= "+category1Id);
             }
             if(category2Id!=null){
-                select.append(" and a.category2_id= "+category2Id);
+                from.append(" and a.category2_id= "+category2Id);
+            }
+            if(foodId!=null){
+                from.append(" and a.m_id=b.menu_id and b.food_id= "+foodId);
             }
             Page<Record> paginate = Db.paginate(pageNo, pageSize, select.toString(), from.toString());
             renderSuccess("",paginate);
@@ -52,9 +60,15 @@ public class MenuController extends BaseController {
         String foodName = getPara("foodName");
         try{
             StringBuffer select = new StringBuffer(" select a.* ");
-            StringBuffer from = new StringBuffer(" from t_food_info a ");
+            StringBuffer from = new StringBuffer(" from t_food_info a where 1=1 ");
             if(StringUtil.isNotEmpty(foodName)){
-                from.append(" where a.f_name like '"+foodName+"' ");
+                from.append(" and a.f_name like '"+foodName+"' ");
+            }
+            if(category1Id!=null){
+                from.append(" and a.category1_id="+category1Id);
+            }
+            if(category2Id!=null){
+                from.append(" and a.category2_id="+category2Id);
             }
             Page<Record> paginate = Db.paginate(pageNo, pageSize, select.toString(), from.toString());
             renderSuccess("",paginate);
@@ -120,11 +134,21 @@ public class MenuController extends BaseController {
         StringBuffer sb = new StringBuffer("select a.m_id,a.m_name,SUBSTRING_INDEX(a.m_img_adr,'~',1) as m_img_adr,a.m_cook_time,a.m_cook_price ");
         sb.append(" from t_menu_info a ,t_menu_option b");
         sb.append(" where a.m_id=b.menu_id and b.food_id= "+foodId);
-        sb.append(" limit 0,8 ");
+        sb.append(" limit 0,10 ");
         List<Record> menuList = Db.find(sb.toString());
         foodInfo.set("menuList",menuList);
         renderSuccess("",foodInfo);
     }
+
+    public void queryCategoryList(){
+        StringBuffer sb = new StringBuffer(" select a.c_id,a.c_name,a.c_img_adr,b.c_id as second_id,b.c_name as second_name,b.c_img_adr as second_img ");
+        sb.append(" from t_category1_info a,t_category2_info b ");
+        sb.append(" where a.c_id=b.first_id order by a.c_sort,b.c_sort asc ");
+        List<Record> categoryList = Db.find(sb.toString());
+        renderSuccess("",categoryList);
+    }
+
+
 
 
 }
