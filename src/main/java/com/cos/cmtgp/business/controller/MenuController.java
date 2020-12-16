@@ -8,7 +8,10 @@ import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author pengxiangZhao
@@ -141,14 +144,53 @@ public class MenuController extends BaseController {
     }
 
     public void queryCategoryList(){
-        StringBuffer sb = new StringBuffer(" select a.c_id,a.c_name,a.c_img_adr,b.c_id as second_id,b.c_name as second_name,b.c_img_adr as second_img ");
-        sb.append(" from t_category1_info a,t_category2_info b ");
-        sb.append(" where a.c_id=b.first_id order by a.c_sort,b.c_sort asc ");
+        StringBuffer sb = new StringBuffer(" select a.c_id,a.c_name,a.c_img_adr,a.c_type,b.c_id as second_id,b.c_name as second_name,b.c_img_adr as second_img ");
+        sb.append(" from t_category1_info a left join t_category2_info b  on a.c_id=b.first_id ");
+        sb.append(" order by a.c_sort,b.c_sort asc ");
         List<Record> categoryList = Db.find(sb.toString());
-        renderSuccess("",categoryList);
+        Map<Integer,Record> firstMap = new HashMap<Integer, Record>();
+        Map<Integer,List<Record>> secondMap = new HashMap<Integer,List<Record>>();
+        for(Record record : categoryList){
+            Integer cId = record.getInt("c_id");
+            if(!firstMap.containsKey(cId)){
+                Record first = new Record();
+                first.set("c_id",cId);
+                first.set("c_name",record.getStr("c_name"));
+                first.set("c_img_adr",record.getStr("c_img_adr"));
+                first.set("c_type",record.getStr("c_type"));
+                firstMap.put(cId,first);
+            }
+            Record second = new Record();
+            second.set("first_id",cId);
+            second.set("c_id",record.getInt("second_id"));
+            second.set("c_name",record.getStr("second_name"));
+            second.set("c_img_adr",record.getStr("second_img"));
+            if(secondMap.containsKey(cId)){
+                secondMap.get(cId).add(second);
+            }else{
+                List<Record> recordList = new ArrayList<Record>();
+                recordList.add(second);
+                secondMap.put(cId,recordList);
+            }
+        }
+        List<Record> resultList = new ArrayList<Record>();
+        for(Integer firstId : firstMap.keySet()){
+            for(Integer secondId : secondMap.keySet()){
+                if(firstId.intValue() == secondId.intValue()){
+                    Record record = firstMap.get(firstId);
+                    record.set("category2List",secondMap.get(secondId));
+                    resultList.add(record);
+                    break;
+                }
+            }
+        }
+        renderSuccess("",resultList);
     }
 
-
+    public void queryHotSearch(){
+        List<Record> recordList = Db.find("select *from t_conf_search");
+        renderSuccess("",recordList);
+    }
 
 
 }
