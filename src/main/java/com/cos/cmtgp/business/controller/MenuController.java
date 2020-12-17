@@ -1,17 +1,20 @@
 package com.cos.cmtgp.business.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.cos.cmtgp.business.model.CartInfo;
+import com.cos.cmtgp.business.model.CartMenu;
 import com.cos.cmtgp.business.model.FoodInfo;
 import com.cos.cmtgp.business.model.MenuInfo;
 import com.cos.cmtgp.common.base.BaseController;
 import com.cos.cmtgp.common.util.StringUtil;
+import com.jfinal.json.FastJson;
+import com.jfinal.kit.HttpKit;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Page;
 import com.jfinal.plugin.activerecord.Record;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * @author pengxiangZhao
@@ -36,7 +39,7 @@ public class MenuController extends BaseController {
             }
             from.append(" where 1=1 ");
             if(StringUtil.isNotEmpty(menuName)){
-                from.append(" and a.m_name like '"+menuName+"' ");
+                from.append(" and a.m_name like '%"+menuName+"%' ");
             }
             if(category1Id!=null){
                 from.append(" and a.category1_id= "+category1Id);
@@ -65,7 +68,7 @@ public class MenuController extends BaseController {
             StringBuffer select = new StringBuffer(" select a.* ");
             StringBuffer from = new StringBuffer(" from t_food_info a where 1=1 ");
             if(StringUtil.isNotEmpty(foodName)){
-                from.append(" and a.f_name like '"+foodName+"' ");
+                from.append(" and a.f_name like '%"+foodName+"%' ");
             }
             if(category1Id!=null){
                 from.append(" and a.category1_id="+category1Id);
@@ -105,7 +108,7 @@ public class MenuController extends BaseController {
         Integer menuId = getParaToInt("menuId");
         Integer foodId = getParaToInt("foodId");
         StringBuffer sb = new StringBuffer(" select a.menu_id,a.m_group,a.m_number,b.f_id,f_name,b.f_type,b.f_price,b.f_unit,b.f_img_adr" +
-                ",round(case f_type when 0 then f_price*m_number else m_number/50*f_price end ,2) as totalPrice ");
+                ",round(case b.f_type when 0 then b.f_price*a.m_number else a.m_number/50*b.f_price end ,2) as totalPrice ");
         sb.append(" from t_menu_option a,t_food_info b ");
         sb.append(" where a.food_id=b.f_id and a.menu_id="+menuId);
         if(foodId!=null){
@@ -120,8 +123,8 @@ public class MenuController extends BaseController {
     public void queryOtherOption(){
         Integer menuId = getParaToInt("menuId");
         Integer group = getParaToInt("group");
-        StringBuffer sb = new StringBuffer(" select a.m_number,b.f_id,f_name,b.f_type,b.f_price,b.f_unit,b.f_img_adr" +
-                ",round(case f_type when 0 then f_price*m_number else m_number/50*f_price end ,2) as totalPrice ");
+        StringBuffer sb = new StringBuffer(" select a.m_number,b.f_id,f_name,b.f_type,b.f_price,b.f_unit,b.f_img_adr,b.f_init_number" +
+                ",round(case b.f_type when 0 then b.f_price*a.m_number else a.m_number/50*f_price end ,2) as totalPrice ");
         sb.append(" from t_menu_option a,t_food_info b ");
         sb.append(" where a.food_id=b.f_id and a.is_free=0 ");
         sb.append(" and a.m_group="+group);
@@ -190,6 +193,141 @@ public class MenuController extends BaseController {
     public void queryHotSearch(){
         List<Record> recordList = Db.find("select *from t_conf_search");
         renderSuccess("",recordList);
+    }
+
+    public void addMenuToCart(){
+        String json = HttpKit.readData(getRequest());
+        Map<String, Object> map = FastJson.getJson().parse(json,Map.class);
+        Integer mId = (Integer)map.get("mId");
+        Integer uId = (Integer)map.get("uId");
+        String remark = map.get("remark").toString();
+        List<CartMenu> cartMenuList = JSON.parseArray(map.get("list").toString(), CartMenu.class);
+        Date now = new Date();
+        CartInfo cartInfo = new CartInfo()
+                .setUserId(uId)
+                .setMenuId(mId)
+                .setCNumber(1L)
+                .setCRemark(remark)
+                .setIsSelected(1)
+                .setGmtCreate(now)
+                .setGmtModified(now);
+        if(cartInfo.save()){
+            for(CartMenu cartMenu : cartMenuList){
+                cartMenu.setCartId(cartInfo.getCId());
+                cartMenu.setGmtCreate(now);
+                cartMenu.setGmtModified(now);
+            }
+            Db.batchSave(cartMenuList,cartMenuList.size());
+        }
+        renderSuccess();
+    }
+
+    public void addMenuDefaultToCart(){
+        Integer menuId = getParaToInt("menuId");
+        Integer uId = getParaToInt("uId");
+        List<Record> recordList = Db.find("select food_id,m_number from t_menu_option where menu_id=" + menuId + " and m_init=1 and is_free=0");
+        Date now = new Date();
+        CartInfo cartInfo = new CartInfo()
+                .setUserId(uId)
+                .setMenuId(menuId)
+                .setCNumber(1L)
+                .setIsSelected(1)
+                .setGmtCreate(now)
+                .setGmtModified(now);
+        if(cartInfo.save()){
+            List<CartMenu> cartMenuList = new ArrayList<CartMenu>();
+            for(Record record : recordList){
+                CartMenu cartMenu = new CartMenu();
+                Integer foodId = record.getInt("food_id");
+                cartMenu.setFoodId(record.getInt("food_id"));
+                cartMenu.setCNumber(record.getLong("m_number"));
+                cartMenu.setCartId(cartInfo.getCId());
+                cartMenu.setGmtCreate(now);
+                cartMenu.setGmtModified(now);
+                cartMenuList.add(cartMenu);
+            }
+            Db.batchSave(cartMenuList,cartMenuList.size());
+        }
+        renderSuccess();
+    }
+
+    public void addFoodToCart(){
+        String json = HttpKit.readData(getRequest());
+        CartInfo cartInfo = FastJson.getJson().parse(json,CartInfo.class);
+        Date now = new Date();
+        cartInfo.setIsSelected(1);
+        cartInfo.setGmtCreate(now);
+        cartInfo.setGmtModified(now);
+        cartInfo.save();
+        renderSuccess();
+    }
+
+    public void queryCartList(){
+        Integer uId = getParaToInt("uId");
+        String sql = " select a.c_id,a.is_selected,a.menu_id,a.food_id,a.c_number,b.food_id as f_id,b.c_number as f_num,SUBSTRING_INDEX(c.m_img_adr,'~',1) as m_img_adr,c.m_name,c.m_cook_price,c.m_cook_time " +
+                " from t_cart_info a left join t_cart_menu b on a.c_id=b.cart_id left join t_menu_info c on a.menu_id=c.m_id where a.user_id="+uId+" order by a.gmt_modified desc";
+        List<Record> recordList = Db.find(sql);
+        Map<Integer,Record> menuMap = new HashMap<Integer, Record>();
+        List<Record> foodList = new ArrayList<Record>();
+        BigDecimal sum = new BigDecimal(0);
+        Boolean flag = true;
+        for(Record record : recordList){
+            Integer foodId = record.getInt("food_id");
+            if(foodId==null){
+                foodId = record.getInt("f_id");
+            }
+            //食材
+            FoodInfo foodInfo = FoodInfo.dao.findById(foodId);
+            Integer fType = foodInfo.getFType();
+            BigDecimal fPrice = foodInfo.getFPrice();
+            //保存bean
+            Record item = new Record();
+            Integer cNumber = record.getInt("c_number");
+            item.set("num",cNumber);
+            Integer isSelected = record.getInt("is_selected");
+            if(isSelected==0){
+                flag = false;
+            }
+            item.set("isSelected",isSelected);
+            if(record.getInt("food_id")==null){
+                Integer menuId = record.getInt("menu_id");
+                Integer fNum = record.getInt("f_num");
+                item.set("mId",menuId);
+                item.set("mName",record.getStr("m_name"));
+                item.set("cookTime",record.getInt("m_cook_time"));
+                item.set("mImg",record.getStr("m_img_adr"));
+                BigDecimal totalPrice = fType == 0 ? fPrice.multiply(BigDecimal.valueOf(fNum)) : fPrice.multiply(BigDecimal.valueOf(fNum).divide(BigDecimal.valueOf(50)));
+                if(menuMap.containsKey(menuId)){
+                    Record menu = menuMap.get(menuId);
+                    BigDecimal oldPrice = menu.getBigDecimal("totalPrice");
+                    sum = sum.add(totalPrice);
+                    menu.set("totalPrice",oldPrice.add(totalPrice));
+                }else{
+                    BigDecimal cookPrice = record.getBigDecimal("m_cook_price");
+                    sum = sum.add(cookPrice.add(totalPrice));
+                    item.set("totalPrice",cookPrice.add(totalPrice));
+                    menuMap.put(menuId,item);
+                }
+            }else{
+                item.set("fId",foodId);
+                item.set("fName",foodInfo.getFName());
+                item.set("price",fPrice);
+                BigDecimal totalPrice = fType == 0 ? fPrice.multiply(BigDecimal.valueOf(cNumber)) : fPrice.multiply(BigDecimal.valueOf(cNumber).divide(BigDecimal.valueOf(50)));
+                sum = sum.add(totalPrice);
+                item.set("totalPrice",totalPrice);
+                item.set("fImg",foodInfo.getFImgAdr().split("~")[0]);
+                foodList.add(item);
+            }
+        }
+
+        Collection<Record> collection = menuMap.values();
+        List<Record> menuList = new ArrayList<Record>(collection);
+        Record result = new Record();
+        result.set("sum",sum);
+        result.set("selectedAll",flag?1:0);
+        result.set("menuList",menuList);
+        result.set("foodList",foodList);
+        renderSuccess("",result);
     }
 
 
