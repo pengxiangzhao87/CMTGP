@@ -269,7 +269,7 @@ public class MenuController extends BaseController {
         List<Record> recordList = Db.find(sql);
         Map<Integer,Record> menuMap = new HashMap<Integer, Record>();
         List<Record> foodList = new ArrayList<Record>();
-        BigDecimal sum = new BigDecimal(0);
+        BigDecimal sum = new BigDecimal("0.00");
         Boolean flag = true;
         for(Record record : recordList){
             Integer foodId = record.getInt("food_id");
@@ -282,6 +282,7 @@ public class MenuController extends BaseController {
             BigDecimal fPrice = foodInfo.getFPrice();
             //保存bean
             Record item = new Record();
+            item.set("cId",record.getInt("c_id"));
             Integer cNumber = record.getInt("c_number");
             item.set("num",cNumber);
             Integer isSelected = record.getInt("is_selected");
@@ -296,16 +297,17 @@ public class MenuController extends BaseController {
                 item.set("mName",record.getStr("m_name"));
                 item.set("cookTime",record.getInt("m_cook_time"));
                 item.set("mImg",record.getStr("m_img_adr"));
+                item.set("isHidden",1);
                 BigDecimal totalPrice = fType == 0 ? fPrice.multiply(BigDecimal.valueOf(fNum)) : fPrice.multiply(BigDecimal.valueOf(fNum).divide(BigDecimal.valueOf(50)));
                 if(menuMap.containsKey(menuId)){
                     Record menu = menuMap.get(menuId);
                     BigDecimal oldPrice = menu.getBigDecimal("totalPrice");
-                    sum = sum.add(totalPrice);
+                    sum = sum.add(isSelected==1?totalPrice:BigDecimal.valueOf(0));
                     menu.set("totalPrice",oldPrice.add(totalPrice));
                 }else{
                     BigDecimal cookPrice = record.getBigDecimal("m_cook_price");
-                    sum = sum.add(cookPrice.add(totalPrice));
-                    item.set("totalPrice",cookPrice.add(totalPrice));
+                    sum = sum.add(isSelected==1?cookPrice.add(totalPrice):BigDecimal.valueOf(0));
+                    item.set("totalPrice",cookPrice.add(totalPrice).setScale(2));
                     menuMap.put(menuId,item);
                 }
             }else{
@@ -313,8 +315,9 @@ public class MenuController extends BaseController {
                 item.set("fName",foodInfo.getFName());
                 item.set("price",fPrice);
                 BigDecimal totalPrice = fType == 0 ? fPrice.multiply(BigDecimal.valueOf(cNumber)) : fPrice.multiply(BigDecimal.valueOf(cNumber).divide(BigDecimal.valueOf(50)));
-                sum = sum.add(totalPrice);
-                item.set("totalPrice",totalPrice);
+                sum = sum.add(isSelected==1?totalPrice:BigDecimal.valueOf(0));
+                item.set("totalPrice",totalPrice.setScale(2));
+                item.set("unit",foodInfo.getFUnit());
                 item.set("fImg",foodInfo.getFImgAdr().split("~")[0]);
                 foodList.add(item);
             }
@@ -323,12 +326,32 @@ public class MenuController extends BaseController {
         Collection<Record> collection = menuMap.values();
         List<Record> menuList = new ArrayList<Record>(collection);
         Record result = new Record();
-        result.set("sum",sum);
+        result.set("sum",sum.setScale(2));
         result.set("selectedAll",flag?1:0);
         result.set("menuList",menuList);
         result.set("foodList",foodList);
         renderSuccess("",result);
     }
 
+    public void checkCartItem(){
+        Integer cId = getParaToInt("cId");
+        Integer uId = getParaToInt("uId");
+        Integer isSelected = getParaToInt("isSelected");
+        StringBuffer sb = new StringBuffer("update t_cart_info set is_selected="+isSelected);
+        if(cId!=null){
+            sb.append(" where c_id="+cId);
+        }else{
+            sb.append(" where user_id="+uId);
+        }
+        Db.update(sb.toString());
+        renderSuccess();
+    }
+
+    public void fineCart(){
+        Integer cId = getParaToInt("cId");
+        Integer flag = getParaToInt("flag");//0增加，1减少
+        Db.update(" update t_cart_info set  c_number=c_number"+(flag==0?"+":"-")+"1 where c_id= "+cId);
+        renderSuccess();
+    }
 
 }
